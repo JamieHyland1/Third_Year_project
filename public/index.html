@@ -1,0 +1,74 @@
+<html>
+<script type="text/javascript" src="js/d3.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+
+
+<body>
+
+	<script>
+		var webSocket = new WebSocket("ws://localhost:3000");
+
+
+		webSocket.onopen = function (event) {
+			console.log('Websocket connection open');
+		};
+
+		var bardata = [];
+
+		webSocket.onmessage = function (event) {
+			//	console.log(event);
+			var e = JSON.parse(event.data);
+			var high = e;
+			console.log(high);
+			bardata.push(high);
+		}
+
+
+		var height = 500
+			, width = 500
+			, barWidth = 50
+			, barOffset = 5;
+
+		var scale = d3.scale.linear()
+			.range([0, height])
+			.domain([0, height]);
+
+
+		var svg = d3.select('body').append('svg')
+			.attr('width', width)
+			.attr('height', height)
+			.style('background', '#C9D7D6')
+
+		function update(bardata) {
+
+
+			var rect = svg.selectAll('rect').data([bardata]);
+
+			rect.enter()
+				.append("rect").attr("x", width/2).attr("y", height/2).attr("height", function (d) {
+					return d
+				})
+				.attr("width", 60)
+				.attr("fill", "green")
+			rect.transition().duration(1000).ease('linear').attr("height", function (d) {
+				return d
+			});
+
+
+
+
+			console.log(bardata);
+
+		}
+		setInterval(function () {
+			update(bardata);
+			bardata.shift();
+		}, 500)
+	</script>
+	<div class="message">
+	</div>
+
+
+</body>
+
+</html>
