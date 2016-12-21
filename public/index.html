@@ -13,15 +13,51 @@
 			console.log('Websocket connection open');
 		};
 
-		var bardata = [];
+		var bardata = []; //array that holds the current value for the candlestick chart
+		var fiveMinuteArray = []; //this array will hold data to draw candlesticks at 5 minutes
+		var oneMinuteArray = []; //this array will hold data to draw candlesticks at 1 minute
+		var open = oneMinuteArray[0]; //get the open
+		var close = oneMinuteArray[oneMinuteArray.length-1];
+		var high = getHigh(oneMinuteArray);
+		var low = getLow(oneMinuteArray);
+		setTimeout(function(){console.log(low)}, 10000)
+		getHigh(oneMinuteArray);
+		setInterval(function(){
+			
+			
+			oneMinuteArray = [];
+			},60000);
+		
+		
+		function getHigh(array)
+		{
+			array.sort();
+			return array[array.length-1]
+		}
+		function getLow(array)
+		{	
+			setInterval(function(){array.sort();
+			console.log("The smallest number in the array is " + array[0] +
+						"\n The largest number in the array is: " + oneMinuteArray[array.length-1]);
+								   		webSocket.send(oneMinuteArray)
+
+			},60000)
+			return array[0]
+		}
 
 		webSocket.onmessage = function (event) {
-			//	console.log(event);
 			var e = JSON.parse(event.data);
 			var high = e;
-			console.log(high);
+		//	console.log("one minute array: " + oneMinuteArray);
+			//console.log("five minute array: " + fiveMinuteArray);
+			oneMinuteArray.push(high);
+			fiveMinuteArray.push(high);
 			bardata.push(high);
 		}
+		webSocket.close = function(event){
+			console.log("closed");
+		}
+
 
 
 		var height = 500
@@ -56,17 +92,19 @@
 
 
 
-
+			
 			console.log(bardata);
 
 		}
 		setInterval(function () {
 			update(bardata);
+			
 			bardata.shift();
-		}, 500)
+		}, 1000)
 	</script>
 	<div class="message">
 	</div>
+	
 
 
 </body>
