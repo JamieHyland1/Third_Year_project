@@ -5,63 +5,68 @@
 
 <body>
 
-	<script>
+<script>
 		var webSocket = new WebSocket("ws://localhost:3000");
-
+		var data = [1];
+		var bardata = []; //array that holds the current value for the candlestick chart
+		var oneMinuteArray = []; //this array will hold data to draw candlesticks at 1 minute
+		var open = oneMinuteArray[0];
+		var close = oneMinuteArray[oneMinuteArray.length-1];
 
 		webSocket.onopen = function (event) {
 			console.log('Websocket connection open');
 		};
-
-		var bardata = []; //array that holds the current value for the candlestick chart
-		var fiveMinuteArray = []; //this array will hold data to draw candlesticks at 5 minutes
-		var oneMinuteArray = []; //this array will hold data to draw candlesticks at 1 minute
-		var open = oneMinuteArray[0]; //get the open
-		var close = oneMinuteArray[oneMinuteArray.length-1];
-		var high = getHigh(oneMinuteArray);
-		var low = getLow(oneMinuteArray);
-		setTimeout(function(){console.log(low)}, 10000)
-		getHigh(oneMinuteArray);
-		setInterval(function(){
-			
-			
-			oneMinuteArray = [];
-			},60000);
 		
 		
-		function getHigh(array)
+				
+	    webSocket.onmessage = function (event)
 		{
-			array.sort();
-			return array[array.length-1]
-		}
-		function getLow(array)
-		{	
-			setInterval(function(){array.sort();
-			console.log("The smallest number in the array is " + array[0] +
-						"\n The largest number in the array is: " + oneMinuteArray[array.length-1]);
-								   		webSocket.send(oneMinuteArray)
-
-			},60000)
-			return array[0]
-		}
-
-		webSocket.onmessage = function (event) {
 			var e = JSON.parse(event.data);
 			var high = e;
-		//	console.log("one minute array: " + oneMinuteArray);
-			//console.log("five minute array: " + fiveMinuteArray);
 			oneMinuteArray.push(high);
-			fiveMinuteArray.push(high);
 			bardata.push(high);
 		}
-		webSocket.close = function(event){
+			
+		setInterval(function()
+		{
+			sendData(oneMinuteArray)
+
+		},60000);
+		
+		
+		function sortNumber(a,b)
+		{
+    	 return a - b;
+		}
+		setTimeout(function()
+		{
+			console.log(data)
+		},60001)
+		function sendData(array)
+		{
+				 var open = array[0];
+				 var close = array[array.length-1];
+			     array.sort(sortNumber);
+				 var high = array[array.length-1];
+				// console.log(high)
+				 var low = array[0];
+				// console.log(high)
+				 var obj = {"high": high, "low": low, "open": open, "close": close};
+				 var msg = JSON.stringify(obj)
+				 webSocket.send(msg)
+				 data.push(bardata);
+				 oneMinuteArray = [];
+		}
+
+		webSocket.close = function(event)
+		{
 			console.log("closed");
 		}
 
 
 
-		var height = 500
-			, width = 500
+		var height = window.innerHeight
+			, width = window.innerWidth
 			, barWidth = 50
 			, barOffset = 5;
 
@@ -70,37 +75,43 @@
 			.domain([0, height]);
 
 
-		var svg = d3.select('body').append('svg')
+		var svg = d3.select('body')
+			.append('svg')
 			.attr('width', width)
 			.attr('height', height)
 			.style('background', '#C9D7D6')
 
-		function update(bardata) {
+		function update(bardata)
+		{
 
-
-			var rect = svg.selectAll('rect').data([bardata]);
+			var rect = svg.selectAll('rect').data(data);
 
 			rect.enter()
-				.append("rect").attr("x", width/2).attr("y", height/2).attr("height", function (d) {
-					return d
-				})
+				.append("rect")
+				.attr("x", width/2)
+				.attr("y", height/2-bardata)
+				.attr("height", bardata)
 				.attr("width", 60)
 				.attr("fill", "green")
-			rect.transition().duration(1000).ease('linear').attr("height", function (d) {
-				return d
-			});
-
-
-
 			
-			console.log(bardata);
-
+				rect.transition()
+					.duration(1000)
+					.ease('linear')
+					.attr("height", function (d){return d});
+			
+				//console.log(bardata);
 		}
-		setInterval(function () {
+
+		setInterval(function ()
+		{
 			update(bardata);
-			
 			bardata.shift();
 		}, 1000)
+		
+
+		
+		
+		
 	</script>
 	<div class="message">
 	</div>
