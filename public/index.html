@@ -16,8 +16,14 @@
 		webSocket.onopen = function (event) {
 			console.log('Websocket connection open');
 		};
+	
+	webSocket.onclose = function()
+	{
+		console.log("closed")
+	}
 		
-		
+
+
 				
 	    webSocket.onmessage = function (event)
 		{
@@ -25,6 +31,7 @@
 			var high = e;
 			oneMinuteArray.push(high);
 			bardata.push(high);
+			console.log(e)
 		}
 			
 		setInterval(function()
@@ -53,7 +60,10 @@
 				// console.log(high)
 				 var obj = {"high": high, "low": low, "open": open, "close": close};
 				 var msg = JSON.stringify(obj)
-				 webSocket.send(msg)
+				 webSocket.send(msg, function(error)
+				{
+					 
+				 })
 				 data.push(bardata);
 				 oneMinuteArray = [];
 		}
@@ -84,7 +94,7 @@
 		function update(bardata)
 		{
 
-			var rect = svg.selectAll('rect').data(data);
+			var rect = svg.selectAll('rect').data(bardata);
 
 			rect.enter()
 				.append("rect")
