@@ -13,7 +13,7 @@
 			, width = 1500
 			, barWidth = 50
 			, barOffset = 55;
-		var move = 105;
+		var move = 1;
 		
 		
 		setInterval(function () {
@@ -38,7 +38,7 @@
 			.attr("class", "rectangles")
 			
 		
-			update(pastRectangles[pastRectangles.length-1]);
+			update(pastRectangles[pastRectangles.length-1]); //make sure the updating bar is set after the last index in the pastRectangles array
 			pastDraw()
 			
 		
@@ -70,7 +70,6 @@
 				setTimeout(function()
 			   {
 					pastRectangles.push(data)
-					moveBar();
 					pastDraw();
 			   },10000)
 
@@ -96,15 +95,6 @@
 			
 			
 				rect.exit();
-			
-
-
-		
-			
-			//console.log(bardata);
-		}
-		function moveBar()
-		{
 			
 		}
 		
