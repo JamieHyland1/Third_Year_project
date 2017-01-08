@@ -6,72 +6,40 @@
 <body>
 
 <script>
-		var webSocket = new WebSocket("ws://localhost:3000");
-		var data = [1];
-		var bardata = []; //array that holds the current value for the candlestick chart
-		var oneMinuteArray = []; //this array will hold data to draw candlesticks at 1 minute
-		var open = oneMinuteArray[0];
-		var close = oneMinuteArray[oneMinuteArray.length-1];
-
-		webSocket.onopen = function (event) {
-			console.log('Websocket connection open');
-		};
+    var webSocket = new WebSocket("ws://localhost:3000");
+    var pastRectangle = [];
+    var bardata = []; //array that holds the current value for the candlestick chart
+    var oneMinuteArray = []; //this array will hold data to draw candlesticks at 1 minute
+    
+	webSocket.onopen = function (event)
+	{
+		console.log('Websocket connection open'); //when the connection is established log this message to the console
+	};
 	
 	webSocket.onclose = function()
 	{
 		console.log("closed")
 	}
-		
-
-
 				
-	    webSocket.onmessage = function (event)
+	webSocket.onmessage = function (event)
+	{
+		var e = JSON.parse(event.data); //the data will be retrieved as a JSON string this will parse the data out of that string
+		var data = e;
+		if(data !== null && typeof data === 'object') //if the data recieved is not null and is of type object
 		{
-			var e = JSON.parse(event.data);
-			var high = e;
-			oneMinuteArray.push(high);
-			bardata.push(high);
-			console.log(e)
+			pastRectangle.push(data); //push this to the pastRectangle array, this will be used to draw historical data
+		}else
+		{
+		oneMinuteArray.push(data); 
+		bardata.push(data); //this array will containt the current price every second
+		//console.log(e)
 		}
-			
-		setInterval(function()
-		{
-			sendData(oneMinuteArray)
+	}
 
-		},60000);
-		
-		
-		function sortNumber(a,b)
-		{
-    	 return a - b;
-		}
-		setTimeout(function()
-		{
-			console.log(data)
-		},60001)
-		function sendData(array)
-		{
-				 var open = array[0];
-				 var close = array[array.length-1];
-			     array.sort(sortNumber);
-				 var high = array[array.length-1];
-				// console.log(high)
-				 var low = array[0];
-				// console.log(high)
-				 var obj = {"high": high, "low": low, "open": open, "close": close};
-				 var msg = JSON.stringify(obj)
-				 webSocket.send(msg, function(error)
-				{
-					 
-				 })
-				 data.push(bardata);
-				 oneMinuteArray = [];
-		}
-
-		webSocket.close = function(event)
-		{
-			console.log("closed");
-		}
+	webSocket.close = function(event)
+	{
+		console.log("connection closed");
+	}
 
 
 
@@ -94,9 +62,12 @@
 		function update(bardata)
 		{
 
-			var rect = svg.selectAll('rect').data(bardata);
+			var rect = 	svg
+					   .selectAll('rect')
+					   .data(bardata);
 
-			rect.enter()
+				 rect
+				.enter()
 				.append("rect")
 				.attr("x", width/2)
 				.attr("y", height/2-bardata)
@@ -104,18 +75,17 @@
 				.attr("width", 60)
 				.attr("fill", "green")
 			
-				rect.transition()
-					.duration(1000)
-					.ease('linear')
-					.attr("height", function (d){return d});
-			
-				//console.log(bardata);
+				 rect
+				.transition()
+				.duration(1000)
+				.ease('linear')
+				.attr("height", function (d){return d});			
 		}
 
 		setInterval(function ()
 		{
-			update(bardata);
-			bardata.shift();
+			update(bardata); //call the update method everysecond with the latest price
+			bardata.shift(); //remove the first index of the array, used to insure array only ever has one value
 		}, 1000)
 		
 
@@ -124,6 +94,7 @@
 		
 	</script>
 	<div class="message">
+		
 	</div>
 	
 
