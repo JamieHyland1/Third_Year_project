@@ -24,7 +24,10 @@ wss.on("connection", function  (ws)
 {
 	var beginning = 250
 	var t = 0.000000000000001;
-	var insertArray = []; // will hold every value generated every second for one minute 
+	var oneArray = []; // will hold every value generated every second for one minute 
+	var fiveArray = []; //will hold every value generated every second for five minutes
+	var oneMin = "One Minute"
+	var fiveMin = "Five Minutes"
 	
 	MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
 
@@ -44,20 +47,26 @@ wss.on("connection", function  (ws)
 	{
 		var x = Math.floor(Math.random()*100);
 		var data = beginning + Perlin.noise(t);
-		insertArray.push(x)
+		oneArray.push(x)
+		fiveArray.push(x)
 		var msg = JSON.stringify(x);
 		ws.send(msg, function(error)
 		{
 			//Prevents the server from crashing if connection drops
 		})
-
-	//console.log(insertArray.length)
-	if(insertArray.length == 60) //The length of the array will act as a counter to when the data should be inserted i.e if the length of the
-	{//								array is 60, 60 seconds will have passed.	
-		
-		insertData(insertArray) //calling function to insert data to mongo on a per minute basis
-		insertArray = []; // wipe the array of all current index's this will reset the counter for the next minute
+        
+     if(fiveArray.length == 300){
+		insertData(oneArray, oneMin)
+		insertData(fiveArray, fiveMin)
+		fiveArray = [];
+	    oneArray = [];
+     }
+	else if(oneArray.length == 60) //The length of the array will act as a counter to when the data should be inserted i.e if the length of the array is 60, 60 seconds will have passed.
+	{	
+		insertData(oneArray, oneMin) //calling function to insert data to mongo on a per minute basis
+		oneArray = []; // wipe the array of all current index's this will reset the counter for the next minute
 	}
+	
 		
 	setTimeout(function()
 	{
@@ -82,8 +91,16 @@ wss.on("connection", function  (ws)
      return a - b;
 	}
 
-function insertData(array)
+function insertData(array, t)
 {
+	var tag = t;
+	var currentdate = new Date(); 
+	var datetime =  currentdate.getDate() + "/"
+                + (currentdate.getMonth()+1)  + "/" 
+                + currentdate.getFullYear() + "  "  
+                + currentdate.getHours() + ":"  
+                + currentdate.getMinutes() + ":" 
+                + currentdate.getSeconds();
 	 var open = array[0]; //get the first value for the minute
 	 var close = array[array.length-1]; // get the last value for the minute
 	 array.sort(sortNumber); //sort the array by size from lowest to highest
@@ -91,8 +108,8 @@ function insertData(array)
 	// console.log(high)
 	var low = array[0];
 	// console.log(high)
-	var obj = {"high": high, "low": low, "open": open, "close": close};
-	//console.log(obj)
+	var obj = {"Date": datetime, "High": high, "Low": low, "Open": open, "Close": close,  "Tag": tag};
+	console.log(obj)
 	var url = 'mongodb://localhost:27017/stockData'; 
 	// Use connect method to connect to the Server
 	MongoClient.connect(url, function(err, db)
