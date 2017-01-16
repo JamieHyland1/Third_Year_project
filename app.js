@@ -32,7 +32,7 @@ wss.on("connection", function  (ws)
 	MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
 
 		assert.equal(err,null) //check to see if there any errors connecting to the database
-		var cursor = db.collection('stockData').find(); // cursor will be an array of objects retrieved from the database
+		var cursor = db.collection('stockData').find().limit(50); // cursor will be an array of objects retrieved from the database
 		cursor.forEach(function(doc, err){ //loop through the cursor
 			assert.equal(null,err) //check for errors
 			//retrieveArray.push(doc); //push each document the cursor points toward to the retrieveArray
@@ -50,20 +50,23 @@ wss.on("connection", function  (ws)
 		oneArray.push(x)
 		fiveArray.push(x)
 		var msg = JSON.stringify(x);
-		ws.send(msg, function(error)
-		{
-			//Prevents the server from crashing if connection drops
-		})
+//		ws.send(msg, function(error)
+//		{
+//            if(error)
+//            {    
+//			//console.error(error)//Prevents the server from crashing if connection drops
+//            }
+//		})
         
      if(fiveArray.length == 300){
-		insertData(oneArray, oneMin)
-		insertData(fiveArray, fiveMin)
+		//insertData(oneArray, oneMin)
+		//insertData(fiveArray, fiveMin)
 		fiveArray = [];
 	    oneArray = [];
      }
 	else if(oneArray.length == 60) //The length of the array will act as a counter to when the data should be inserted i.e if the length of the array is 60, 60 seconds will have passed.
 	{	
-		insertData(oneArray, oneMin) //calling function to insert data to mongo on a per minute basis
+		//insertData(oneArray, oneMin) //calling function to insert data to mongo on a per minute basis
 		oneArray = []; // wipe the array of all current index's this will reset the counter for the next minute
 	}
 	
@@ -109,13 +112,13 @@ function insertData(array, t)
 	var low = array[0];
 	// console.log(high)
 	var obj = {"Date": datetime, "High": high, "Low": low, "Open": open, "Close": close,  "Tag": tag};
-	console.log(obj)
+	//console.log(obj)
 	var url = 'mongodb://localhost:27017/stockData'; 
 	// Use connect method to connect to the Server
 	MongoClient.connect(url, function(err, db)
 	{
 		assert.equal(null, err);
-		console.log("Connected correctly to server");
+	//	console.log("Connected correctly to server");
 		// Insert a single document
 		db.collection('stockData').insertOne(obj, function(err, r)
 		{
@@ -123,7 +126,7 @@ function insertData(array, t)
 			assert.equal(1, r.insertedCount);
 			
 			db.close();
-			console.log("database closed")
+			console.log("Inserted Item")
 		});
 	});
 }
