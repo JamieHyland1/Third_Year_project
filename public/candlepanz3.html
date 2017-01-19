@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<style>
+    svg {
+        color: #fff;
+        font: 8px sans-serif;
+        shape-rendering: crispEdges;
+        background-color: #1c1f24;
+    }
+
+</style>
+
+<head>
+	<script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="http:/ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+
+</head>
+
+
+<body>
+
+    <div id="chart"></div>
+
+    <script type="text/javascript">
+        //based on candlestick6panzoooom.html
+        window.onload = function() {
+            var width = 600;
+            var height = 500;
+
+            var marginTop = 20;
+            var marginBottom = 20;
+            var marginLeft = 60; //initial space required to the left of the chart
+            var marginRight = 20;
+
+            var candleWidth = 20;
+            var candleGap = 40;
+            var candleMargin = 10;
+
+            var wickThickness = "2";
+
+            var hLineColor = "#b5b6b7";
+
+
+            var data = [{
+                Date: 01 / 12 / 15,
+                High: 118.81,
+                Low: 116.86,
+                Open: 118.75,
+                Close: 117.34
+            }, {
+                Date: 02 / 12 / 15,
+                High: 118.11,
+                Low: 116.08,
+                Open: 117.05,
+                Close: 116.28
+            }, {
+                Date: 03 / 12 / 15,
+                High: 116.79,
+                Low: 114.22,
+                Open: 116.55,
+                Close: 115.2
+            }, {
+                Date: 04 / 12 / 15,
+                High: 119.25,
+                Low: 115.11,
+                Open: 115.29,
+                Close: 119.03
+            }, {
+                Date: 07 / 12 / 15,
+                High: 119.86,
+                Low: 117.81,
+                Open: 118.98,
+                Close: 118.28
+            }, {
+                Date: 05 / 01 / 16,
+                High: 105.85,
+                Low: 102.41,
+                Open: 105.75,
+                Close: 102.71
+            }, {
+                Date: 04 / 02 / 16,
+                High: 97.33,
+                Low: 95.19,
+                Open: 95.86,
+                Close: 96.6
+            }];
+
+            var maxi = d3.max(data, function(d) {
+                return d.value;
+            }); // to check what the max value in the data array is ... for info purposes
+            console.log(maxi); //not displaying in brackets??
+
+            // .map() creates an new array based on function
+            var maxLow = d3.min(data.map(function(x) {
+                    return x["Low"];
+                })) // returns the lowest value of 'low'
+            var maxHigh = d3.max(data.map(function(x) {
+                    return x["High"];
+                })) // returns the highest value of 'high'
+            var maxMinDiff = (maxHigh - maxLow) * 0.1;
+            console.log(maxMinDiff);
+
+            //function that will return the lowest of two numbers a or b
+            function min(a, b) {
+                return a < b ? a : b;
+            };
+
+            //function that will return the highest of two number a or b
+            function max(a, b) {
+                return a > b ? a : b;
+            };
+
+            //These axis variables are not in used yet ... 
+            var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom")
+            .tickSize(-height);
+
+            var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left")
+            .ticks(5)
+            .tickSize(-width);
+
+            var x = d3.scale.linear().domain([-width / 2, width / 2]).range([0, width]);
+
+            //Var Y is a function that will scale the numbers on the Y axis from an input domain into output range; height-0 which inverts or flips Y otherwise visualisation is upside down
+            var y = d3.scale.linear()
+                .domain([maxLow - maxMinDiff, maxHigh + maxMinDiff]) //changed to reflect new variables for lowest, highest and difference to define input domain
+                .range([height - marginTop - marginBottom, 0 + marginLeft + marginRight]); //range has still not been modified ... remember x,y have been reversed to reflect y,x
+			
+			 
+
+            //this section is very similar to mashup code at #2
+            var zoom = d3.behavior.zoom()
+                .x(x)
+                .y(y)
+                .scaleExtent([1, 32])
+                .on("zoom", zoomed);
+
+			   var chart = d3.select("#chart")
+                    .append("svg:svg") //namespace prefix
+                    .attr("class", "chart")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .call(d3.behavior.zoom().on("zoom", function() {
+                        chart.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+                    })).call(zoom);
+
+                   
+			   		chart.append("g")
+			   		.attr("class", "lines");
+			
+			   		chart.append("g")
+			   		.attr("class","rectangles")
+		
+            //function to build a chart using data in var data
+            //.call zoom and append g enable pan and zoom ... still not perfect ... don't want y axis moving etc
+            function buildChart(data) {
+
+            
+
+                //script to create horizontal lines for viewing
+                chart.selectAll("line.y")
+                    .data(y.ticks(20))
+                    .enter()
+                    .append("svg:line")
+                    .attr("class", "y")
+                    .attr("x1", marginLeft)
+                    .attr("x2", width - marginRight)
+                    .attr("y1", y)
+                    .attr("y2", y)
+                    .attr("stroke", hLineColor);
+
+                chart.selectAll("text.yrule")
+                    .data(y.ticks(10))
+                    .enter()
+                    .append("svg:text")
+                    .attr("class", "yrule")
+                    .attr("x", marginLeft / 2)
+                    .attr("y", y)
+                    .attr("dy", 0)
+                    .attr("dx", 20)
+                    .style("fill", "#b5b6b7")
+                    .attr("text-anchor", "middle")
+                    .text(String);
+
+                //script for creating the candlestick wick that will lie behind the rectangle
+                //x1 y1 represent High and x2 y2 represent Low
+                //coded first to sit beneath the rectangle
+                chart.selectAll("line.wick")
+                    .data(data)
+                    .enter()
+                    .append("svg:line")
+                    .attr("x1", function(d, i) {
+                        return candleMargin + marginLeft + candleWidth / 2 + (candleGap * i);
+                    })
+                    .attr("x2", function(d, i) {
+                        return candleMargin + marginLeft + candleWidth / 2 + (candleGap * i);
+                    })
+                    .attr("y1", function(d) {
+                        return y(max(d.High, d.Low));
+                    }) //return which ever is highest value H or L using var y for scaling
+                    .attr("y2", function(d) {
+                        return y(min(d.High, d.Low));
+                    }) //return which ever is lowest value H or L using var y for scaling
+                    .attr("stroke", function(d) {
+                        return d.Open > d.Close ? "#a01f1b" : "#1ba048";
+                    })
+                    .attr("stroke-width", wickThickness);
+
+                //.attr("stroke", "grey")
+
+                //script for creating rectangle representing Open and Close positions
+                chart.selectAll("rect")
+                    .data(data)
+                    .enter()
+                    .append("svg:rect")
+                    .attr("x", function(d, i) {
+                        return candleMargin + marginLeft + (candleGap * i);
+                    })
+                    .attr("y", function(d) {
+                        return y(max(d.Open, d.Close));
+                    }) //top left hand corner of rectangle coordinates
+                    .attr("height", function(d) {
+                        return y(min(d.Open, d.Close)) - y(max(d.Open, d.Close));
+                    })
+                    .attr("width", function(d) {
+                        return candleWidth
+                    })
+                    .attr("fill", function(d) {
+                        return d.Open > d.Close ? "#a01f1b" : "#1ba048";
+                    });
+
+
+            } //closing brackets for buildChart function
+			 function zoomed() {
+            chart.select(".x.axis").call(xAxis);
+            chart.select(".y.axis").call(yAxis);
+            //svg.select(".rect").call(chart);
+        	}
+			
+			zoomed();
+
+            buildChart(data);
+		
+        }; //closing brackets for window.onload function
+
+       
+
+    </script>
+
+
+
+</body>
+
+</html>

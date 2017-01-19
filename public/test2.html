@@ -6,104 +6,205 @@
 <body>
 
 	<script>
+		var width = 600;
+		var height = 500;
+		var marginTop = 20;
+		var marginBottom = 20;
+		var marginLeft = 60; //initial space required to the left of the chart 
+		var marginRight = 20;
+		var candleWidth = 20;
+		var candleGap = 40;
+		var candleMargin = 10;
+		var wickThickness = "2";
+		var hLineColor = "#b5b6b7";
 		var bardata = []; //array that holds the current value for the candlestick chart
-		var pastRectangles = [50,12,14,15,35,64] //holds the data for the historical rectangles to be drawn
-		var data
-			, height = 900
-			, width = 1500
-			, barWidth = 50
-			, barOffset = 55;
-		var move = 1;
+		var barWidth = 50;
+		var barOffset = 55;
+		var pastRectangles = [{
+				Date: 01 / 12 / 15
+				, High: 118.81
+				, Low: 116.86
+				, Open: 118.75
+				, Close: 117.34
+            }, {
+				Date: 02 / 12 / 15
+				, High: 118.11
+				, Low: 116.08
+				, Open: 117.05
+				, Close: 116.28
+            }, {
+				Date: 03 / 12 / 15
+				, High: 116.79
+				, Low: 114.22
+				, Open: 116.55
+				, Close: 115.2
+            }, {
+				Date: 04 / 12 / 15
+				, High: 119.25
+				, Low: 115.11
+				, Open: 115.29
+				, Close: 119.03
+            }, {
+				Date: 07 / 12 / 15
+				, High: 119.86
+				, Low: 117.81
+				, Open: 118.98
+				, Close: 118.28
+            }, {
+				Date: 05 / 01 / 16
+				, High: 105.85
+				, Low: 102.41
+				, Open: 105.75
+				, Close: 102.71
+            }, {
+				Date: 04 / 02 / 16
+				, High: 97.33
+				, Low: 95.19
+				, Open: 95.86
+				, Close: 96.6
+            },
+			{
+				Date: 02 / 02 / 16
+				, High: 197.33
+				, Low: 195.20
+				, Open: 395.86
+				, Close: 397.87
+            }] //holds the data for the historical rectangles to be drawn
+
+		var maxi = d3.max(pastRectangles, function (d)
+		{
+		return d.High;
+		}); // to check what the max value in the data array is ... for info purposes
+
+		var maxLow = d3.min(pastRectangles.map(function (x)
+		{
+		return x["Low"];
+		})) 
+		var maxHigh = d3.max(pastRectangles.map(function (x)
+		{
+		return x["High"];
+		})) 
 		
+		var maxMinDiff = (maxHigh - maxLow) * 0.1;
+		console.log(maxMinDiff);
+
+		function min(a, b)
+		{
+		return a < b ? a : b;
+		};
 		
-		setInterval(function () {
-			var x = Math.floor(Math.random() * 100) //generate a random whole number between 0-99
-			bardata.push(x); // push that value into the bardata array
-			data = x; //set the value of x to data, will be used to update the pastRectangles array every 10 seconds
-		}, 1000);
+		//function that will return the highest of two number a or b
+		function max(a, b)
+		{
+		return a > b ? a : b;
+		};
 		
-		data = (barOffset+barOffset)
+		var x = d3.scale.linear().domain([-width / 2, width / 2]).range([0, width]);
+
+		//Var Y is a function that will scale the numbers on the Y axis from an input domain into output range; height-0 which inverts or flips Y otherwise visualisation is upside down
+		var y = d3.scale.linear()
+				.domain([maxLow - maxMinDiff, maxHigh + maxMinDiff]) //changed to reflect new variables for lowest, highest and difference to define input  domain
+				.range([height - marginTop - marginBottom, 0 + marginLeft + marginRight]); //range has still not been modified ... remember x,y have been reversed to reflect y,x
+
+
+		//		setInterval(function () {
+		//			var x = Math.floor(Math.random() * 100) //generate a random whole number between 0-99
+		//			bardata.push(x); // push that value into the bardata array
+		//			data = x; //set the value of x to data, will be used to update the pastRectangles array every 10 seconds
+		//		}, 1000);
+
+		data = (barOffset + barOffset)
 		var offset = pastRectangles.length * (barOffset + barWidth);
 
+
 		
-		var scale = d3.scale.linear()
-			.range([0, pastRectangles])
-			.domain([0, height]);
 		var svg = d3.select('body')
 			.append('svg')
 			.attr('width', width)
 			.attr('height', height)
-			.style('background', 'red')
+			.style('background', 'black')
 			.append("g")
 			.attr("class", "rectangles")
-			
-		
-			update(pastRectangles[pastRectangles.length-1]); //make sure the updating bar is set after the last index in the pastRectangles array
-			pastDraw()
-			
-		
-			function pastDraw()
-			{
-				var pastRect = svg.selectAll('rect').data(pastRectangles);					//This function will loop through the 			                                                                                pastRectangles array and will
-				pastRect.enter()															//draw a rectange for every index in the array
-					.append("rect")															//The reason for not using bardata is that it only holds one value
-					.attr("g", "rectangles")
-					.attr("x", function(d,i){return i * (barWidth+barOffset)})				//every second and therefore a second array is needed to hold the
-					.attr("y", function(d){return height - d})								//historical data
-					.attr("height", function(d){return d})									
-					.attr("width", 60)
-					.attr("id", "history")
-					.attr("fill", "steelblue")
-					pastRect.transition()
-				.duration(1000)
-				.ease('linear')
-				.attr("height", function (d) {
-					return d
-				})
-					pastRect.exit()
-					var bar = svg.selectAll("#updateBar")			
-					.transition()
-					.duration(1000)
-					.attr("transform", "translate("+move+",0)")
-					move += (barWidth+barOffset);
-					
-				setTimeout(function()
-			   {
-					pastRectangles.push(data)
-					pastDraw();
-			   },10000)
 
 
-			}
-		function update(bardata) {
-				var rect = svg.selectAll('rect').data([bardata]);							//This function essentially draws a new rectangle for every 
-				rect.enter()																//value of bardata, however, because bardata is constantly 
-				.append("rect")																//removing the current value for a new value every second
-				.attr("x",offset) 															//it gives the illusion of one rectangle updating regularly
-				.attr("y", function(d){return height - d})
-				.attr("id", "updateBar")
-				.attr("height", bardata)										
-				.attr("width", 60)
-				.attr("fill", "white")
-				.attr("stroke", "black")
-				rect.transition()
-				.duration(1000)
-				.ease('linear')
-				.attr("height", function (d) {
-					return d
-				})
-			
-			
-				rect.exit();
-			
-		}
-		
-		setInterval(function () {
-			update(bardata); //call the update function with the current value of bardata
-			bardata.shift(); // remove the the last index of the array from bardata
-			
-		}, 1000)
+		//	update(pastRectangles[pastRectangles.length-2]); //make sure the updating bar is set after the last index in the pastRectangles array
+		//pastDraw()
 
+
+		//function pastDraw() {
+			var pastRect = 	svg.selectAll('rect').data(pastRectangles); //This function will loop through the pastRectangles array and will
+						   	pastRect.enter() //draw a rectange for every index in the array
+							.append("rect") //The reason for not using bardata is that it only holds one value
+							.attr("g", "rectangles")
+							.attr("x", function (d, i) {
+								return candleMargin + marginLeft + (candleGap * i);
+							}) //every second and therefore a second array is needed to hold the
+							.attr("y", function (d, i) {
+								return candleMargin + marginLeft + (candleGap * i);
+							}) //historical data
+							.attr("height", function (d) 
+							{
+								return y(min(d.Open, d.Close)) - y(max(d.Open, d.Close))
+							})
+							.attr("width", candleWidth)
+							.attr("id", "history")
+							.attr("fill", function(d)
+							{
+							  return d.Open > d.Close ? "#a01f1b" : "#1ba048";
+							}).call(d3.behavior.zoom().on("zoom", function() {
+                        pastRect.attr("transform", "translate(" + d3.event.translate[0] + ")")
+                    }));
+							pastRect.transition()
+							.duration(1000)
+							.ease('linear')
+							.attr("height", function (d)
+							{
+								return y(min(d.Open, d.Close)) - y(max(d.Open, d.Close))
+							})
+							pastRect.exit();
+		//}
+
+//				
+//				var bar = svg.selectAll("#updateBar")
+//				.transition()
+//				.duration(1000)
+//				.attr("transform", "translate(" + move + ",0)")
+//				move += (barWidth + barOffset);
+//						setTimeout(function () {
+//							pastRectangles.push(data)
+//							pastDraw();
+//						}, 10000)
+//
+//
+//									}
+//								function update(bardata) {
+//										var rect = svg.selectAll('rect').data([bardata]);							//This function essentially draws a new rectangle for every 
+//										rect.enter()																//value of bardata, however, because bardata is constantly 
+//										.append("rect")																//removing the current value for a new value every second
+//										.attr("x",offset) 															//it gives the illusion of one rectangle updating 																				regularly
+//										.attr("y", function(d){return height - d})
+//										.attr("id", "updateBar")
+//										.attr("height", bardata)										
+//										.attr("width", 60)
+//										.attr("fill", "white")
+//										.attr("stroke", "black")
+//										rect.transition()
+//										.duration(1000)
+//										.ease('linear')
+//										.attr("height", function (d) {
+//											return d
+//										})
+//									
+//									
+//										rect.exit();
+//									
+//								}
+//								
+//								setInterval(function () {
+//									update(bardata); //call the update function with the current value of bardata
+//									bardata.shift(); // remove the the last index of the array from bardata
+//									
+//								}, 1000)
 	</script>
 	<div class="message">
 	</div>

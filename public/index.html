@@ -1,6 +1,9 @@
 <html>
 <script type="text/javascript" src="js/d3.min.js"></script>
+        <script type="text/javascript" src="http://d3js.org/d3.v2.min.js"></script>
+
 <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script src="js/spin.min.js"></script>
 
 
 <body>
@@ -10,188 +13,248 @@
 		<button type="button" id="button2">1min</button>
 	
 	<script>
-		var webSocket = new WebSocket("ws://localhost:3000");
+     var webSocket = new WebSocket("ws://localhost:3000");
 		
-			webSocket.onopen = function (event) {
-			console.log('Websocket connection open'); //when the connection is established log this message to the console
-		};
+     webSocket.onopen = function (event)
+     {
+      console.log('Websocket connection open'); //when the connection is established log this message to the console
+     };
 
-		webSocket.onclose = function () {
-			console.log("closed")
-		}
-
+     webSocket.onclose = function ()
+     {
+      console.log("closed")
+     }
+        var counter = 0; 
 		webSocket.onmessage = function (event, err) {
 			var e = JSON.parse(event.data); //the data will be retrieved as a JSON string this will parse the data out of that string
 			var data = e;
 			if (data !== null && typeof data === 'object') //if the data recieved is not null and is of type object
 			{
                 if(data.Tag =="One Minute"){
-				pastRectangles.push(data); //push this to the pastRectangle array, this will be used to draw historical data
-				//pastDraw();
+                    historical.push(data)
+                    counter++
+                    if(counter == 50)
+                    {
+                     buildChart(historical);
+                    }
+
                 }else{
-                    fiveArray.push(data)
+                    fiveHistorical.push(data);
+                    counter++
                 }
+
 			} else {
-				oneMinuteArray.push(data);
-				bardata.push(data); //this array will containt the current price every second
+				current.push(data);
 			}
+            
 		}
 
 		webSocket.close = function (event) {
 			console.log("connection closed");
 		}
+        var opts = {
+  lines: 9, // The number of lines to draw
+  length: 9, // The length of each line
+  width: 5, // The line thickness
+  radius: 14, // The radius of the inner circle
+  color: '#EE3124', // #rgb or #rrggbb or array of colors
+  speed: 1.9, // Rounds per second
+  trail: 40, // Afterglow percentage
+  className: 'spinner', // The CSS class to assign to the spinner
+};
 
-		
-		
-		
-		var width = 600;
-		var height = 500;
-		var marginTop = 20;
-		var marginBottom = 20;
-		var marginLeft = 60; //initial space required to the left of the chart 
-		var marginRight = 20;
-		var candleWidth = 20;
-		var candleGap = 40;
-		var candleMargin = 10;
-		var wickThickness = "2";
-		var hLineColor = "#b5b6b7";
-		var barWidth = 50;
-		var barOffset = 55;
-		var fiveArray = [{
-                Date: 01 / 12 / 15,
-                High: 15,
-                Low: 15,
-                Open: 15,
-                Close: 15
-            }];
-		var pastRectangles = [{
-               Date: 01 / 12 / 15,
-                High: 15,
-                Low: 15,
-                Open: 15,
-                Close: 15
-            }];
-                
-		var bardata = []; //array that holds the current value for the candlestick chart
-		var oneMinuteArray = []; //this array will hold data to draw candlesticks at 1 minute
-		var maxi = d3.max(pastRectangles, function (d)
-		{
-		return d.High;
-		}); // to check what the max value in the data array is ... for info purposes
+  var candleWidth = 20;
+          var candleGap = 40;
+          var candleMargin = 10;
+          var wickThickness = "2";
+          var hLineColor = "#b5b6b7";
+    
+          var margin = {top: 20, right: 20, bottom: 20, left: 60},
+          width = 940 - margin.left - margin.right,
+          height = 640 - margin.top - margin.bottom;
+ var historical = [];
+            var fiveHistorical = [];
+            var current = [];
 
-		var maxLow = d3.min(pastRectangles.map(function (x)
-		{
-		return x["Low"];
-		})) 
-		var maxHigh = d3.max(pastRectangles.map(function (x)
-		{
-		return x["High"];
-		})) 
-		
-		var maxMinDiff = (maxHigh - maxLow) * 0.1;
-		console.log(maxMinDiff);
+    var data = [];
 
-		function min(a, b)
-		{
-		return a < b ? a : b;
-		};
-		
-		//function that will return the highest of two number a or b
-		function max(a, b)
-		{
-		return a > b ? a : b;
-		};
-		
-		var x = d3.scale.linear().domain([-width / 2, width / 2]).range([0, width]);
+    var maxi = d3.max(data, function(d) {
+      return d.value;
+    }); 
 
-		//Var Y is a function that will scale the numbers on the Y axis from an input domain into output range; height-0 which inverts or flips Y otherwise visualisation is upside down
-		var y = d3.scale.linear()
-				.domain([maxLow - maxMinDiff, maxHigh + maxMinDiff]) //changed to reflect new variables for lowest, highest and difference to define input  domain
-				.range([height - marginTop - marginBottom, 0 + marginLeft + marginRight]); //range has still not been modified ... remember x,y have been reversed to reflect y,x
+    var maxLow = d3.min(data.map(function(x) {
+        return x["Low"];
+      }))
+    var maxHigh = d3.max(data.map(function(x) {
+        return x["High"];
+      })) 
+    var maxMinDiff = (maxHigh - maxLow) * 0.1;
+
+    function min(a, b) {
+      return a < b ? a : b;
+    };
+
+    function max(a, b) {
+      return a > b ? a : b;
+    };
+
+    var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom")
+      .tickSize(-height);
+
+    var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left")
+      .ticks(5)
+      .tickSize(-width);
+
+    var x = d3.scale.linear().domain([-width / 2, width / 2]).range([0, width]);
+
+    var y = d3.scale.linear()
+      .domain([maxLow - maxMinDiff, maxHigh + maxMinDiff]) //changed to reflect new variables for lowest, highest and difference to define input domain
+      .range([height, 0]); //range has still not been modified ... remember x,y have been reversed to reflect y,x
 
 
-			var svg = d3.select('body')
-			.append('svg')
-			.attr('width', width)
-			.attr('height', height)
-			.style('background', 'black')
-			.append("g")
-			.attr("class", "rectangles")
+    var zoom = d3.behavior.zoom()
+      .x(x)
+      .y(y)
+      .scaleExtent([1, 32])
+      .on("zoom", zoomed);
+      
+    var chart = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      
+    var grid = chart.append("g")
+      .attr("class", "gridding");
 
-//		update(pastRectangles[pastRectangles.length - 1]); //make sure the updating bar is set after the last index in the pastRectangles array
-		
-			pastDraw(fiveArray);
+    var lines = grid.selectAll("line.y")
+      .data(y.ticks(20))
+      .enter()
+      .append("svg:line")
+      .attr("class", "y")
+      .attr("x1", 0)
+      .attr("x2", width)
+      .attr("y1", y)
+      .attr("y2", y)
+      .attr("stroke", hLineColor);
 
-	function pastDraw(array) {
-			var pastRect = 	svg.selectAll('rect').data(array); //This function will loop through the pastRectangles array and will
-						   	pastRect.enter() //draw a rectange for every index in the array
-							.append("rect") //The reason for not using bardata is that it only holds one value
-							.attr("g", "rectangles")
-							.attr("x", function (d, i) {
-								return candleMargin + marginLeft + (candleGap * i);
-							}) //every second and therefore a second array is needed to hold the
-							.attr("y", function (d, i) {
-								return candleMargin + marginLeft + (candleGap * i);
-							}) //historical data
-							.attr("height", function (d) 
-							{
-								return y(min(d.Open, d.Close)) - y(max(d.Open, d.Close))
-							})
-							.attr("width", candleWidth)
-							.attr("id", "history")
-							.attr("fill", function(d)
-							{
-							  return d.Open > d.Close ? "#a01f1b" : "#1ba048";
-							});
-							pastRect.transition()
-							.duration(1000)
-							.ease('linear')
-							.attr("height", function (d)
-							{
-								return y(min(d.Open, d.Close)) - y(max(d.Open, d.Close))
-							});
-							pastRect.exit();
-		}
-				
-					document.getElementById("button2").addEventListener("click", function(){
-						pastDraw(pastRectangles)
-						console.log("clicked one Minute Button")
-					})
-					document.getElementById("button").addEventListener("click", function(){
-						d3.selectAll("rect").remove();
-						pastDraw(fiveArray)
-						console.log("clicked Five Minute Button")
-					})
+    var numbers = grid.selectAll("text.yrule")
+      .data(y.ticks(10))
+      .enter()
+      .append("svg:text")
+      .attr("class", "yrule")
+      .attr("x", 0)
+      .attr("y", y)
+      .attr("dy", 0)
+      .attr("dx", 20)
+      .style("fill", "#b5b6b7")
+      .attr("text-anchor", "middle")
+
+    chart.append("clipPath")
+      .attr("id", "clip")
+      .append("rect")
+      .attr("width", width)
+      .attr("height", height);
+      
+    chart.append("rect")
+      .attr("class", "pane")
+      .attr("width", width)
+      .attr("height", height)
+      .call(zoom)
+      .style("fill","none")
+      .style("pointer-events", "all");
+
+    var candlestick = chart.append("g")
+      .attr("clip-path", "url(#clip)")
+      .append("g")
+      .attr("class", "candlesticks")
+var bar = new ProgressBar.Line(container, {
+  strokeWidth: 4,
+  easing: 'easeInOut',
+  duration: 1400,
+  color: '#FFEA82',
+  trailColor: '#eee',
+  trailWidth: 1,
+  svgStyle: {width: '100%', height: '100%'},
+  text: {
+    style: {
+      // Text color.
+      // Default: same as stroke color (options.color)
+      color: '#999',
+      position: 'absolute',
+      right: '0',
+      top: '30px',
+      padding: 0,
+      margin: 0,
+      transform: null
+    },
+    autoStyleContainer: false
+  },
+  from: {color: '#FFEA82'},
+  to: {color: '#ED6A5A'},
+  step: (state, bar) => {
+    bar.setText(Math.round(bar.value() * 100) + ' %');
+  }
+});
+
+bar.animate(1.0);  // Number from 0.0 to 1.0
+  
+    function buildChart(array) 
+    {
+      var wicks = candlestick.selectAll("wick")
+        .data(data)
+        .enter()
+        .append("line")
+        .attr("x1", function(d, i) {
+          return candleMargin + candleWidth / 2 + (candleGap * i);
+        })
+        .attr("x2", function(d, i) {
+          return candleMargin + candleWidth / 2 + (candleGap * i);
+        })
+        .attr("y1", function(d) {
+          return y(max(d.High, d.Low));
+        }) 
+        .attr("y2", function(d) {
+          return y(min(d.High, d.Low));
+        })
+        .attr("stroke", function(d) {
+          return d.Open > d.Close ? "#a01f1b" : "#1ba048";
+        })
+        .attr("stroke-width", wickThickness);
+
+    
+      var candle = candlestick.selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("x", function(d, i) {
+          return candleMargin + (candleGap * i);
+        })
+        .attr("y", function(d) {
+          return y(max(d.Open, d.Close));
+        })
+        .attr("height", function(d) {
+          return y(min(d.Open, d.Close)) - y(max(d.Open, d.Close));
+        })
+        .attr("width", function(d) {
+          return candleWidth
+        })
+        .attr("fill", function(d) {
+          return d.Open > d.Close ? "#a01f1b" : "#1ba048";
+        })
+        .style("pointer-events", "none");
+
+    } 
+    buildChart(data);
 
 
-//		function update(bardata) {
-//				var rect = svg.selectAll('rect').data([bardata]);							//This function essentially draws a new rectangle for every 
-//				rect.enter()																//value of bardata, however, because bardata is constantly 
-//				.append("rect")																//removing the current value for a new value every second
-//				.attr("x",offset) 															//it gives the illusion of one rectangle updating regularly
-//				.attr("y", function(d){return 500 - d})
-//				.attr("id", "updateBar")
-//				.attr("height", bardata)										
-//				.attr("width", 60)
-//				.attr("fill", "white")
-//				.attr("stroke", "black")
-//				rect.transition()
-//				.duration(1000)
-//				.ease('linear')
-//				.attr("height", function (d) {
-//					return d
-//				})
-//			
-//			
-//				rect.exit();
-//			
-//		}
-		
-
-//		setInterval(function () {
-//			update(bardata); //call the update method everysecond with the latest price
-//			bardata.shift(); //remove the first index of the array, used to insure array only ever has one value
-//		}, 1000)
+    function zoomed() {
+      candlestick.attr("transform", "translate(" + d3.event.translate[0] + ")")
+    }
 	</script>
 
 

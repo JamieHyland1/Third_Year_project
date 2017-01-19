@@ -137,12 +137,12 @@ console.log("WebSocket Server running on port 3000")
 console.log("Web Server running on port 8081")
 
 app.use(express.static('public')); //set up express to send static files
-app.get('/index.html', function (req, res) {
+app.get('/MainFile.html', function (req, res) {
 	res.sendFile(__dirname + "/" + "index.html");
 })
 
 
-
+app.get("5minute", getData())
 var server = app.listen(8081, function () {
 	var host = server.address().address
 	var port = server.address().port
