@@ -1,5 +1,4 @@
 <!--Doctype html-->
-<!--Eleanor Noonan N00147653 iadt.ie -->
 <html>
 <style>
     svg {
@@ -26,7 +25,7 @@
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="styles/bootstrap.min.js"></script>
+    <script src="styles/bootstrap.min.css"></script>
     <link rel="stylesheet" type="text/css" href="styles/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="styles/myWebsiteStyles.css">
     <!--custom CSS-->
@@ -41,7 +40,6 @@
 
 
     <!--using CDN because dropdown elements of bootstrap not operating correctly without-->
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script src="js/progressbar.min.js"></script>
     <script src="js/spin.js"></script>
     <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
@@ -121,27 +119,7 @@
                     </div>
                 </div>
             </div>
-<!--
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
-            </br>
+
 -->
             <div class="container" id="left2">
                 <div class="col-lg-2">
@@ -206,8 +184,48 @@
         var width = 940 - margin.left - margin.right
         var height = 640 - margin.top - margin.bottom;
         var historical = [];
-        var fiveHistorical = [];
-        var current = [1];
+        var fiveHistorical = [
+			{
+                Date: 01 / 12 / 15,
+                High: 118.81,
+                Low: 116.86,
+                Open: 118.75,
+                Close: 117.34
+            }, {
+                Date: 02 / 12 / 15,
+                High: 118.11,
+                Low: 116.08,
+                Open: 117.05,
+                Close: 116.28
+            }, {
+                Date: 03 / 12 / 15,
+                High: 116.79,
+                Low: 114.22,
+                Open: 116.55,
+                Close: 115.2
+            }, {
+                Date: 04 / 12 / 15,
+                High: 119.25,
+                Low: 115.11,
+                Open: 115.29,
+                Close: 119.03
+            }, {
+                Date: 07 / 12 / 15,
+                High: 119.86,
+                Low: 117.81,
+                Open: 118.98,
+                Close: 118.28
+            }, {
+                Date: 05 / 01 / 16,
+                High: 5.85,
+                Low: 102.41,
+                Open: 105.75,
+                Close: 102.71
+            } 
+		];
+	    var liveXoffset;
+		var liveYoffset;
+        var current = [0];
         var data = [];
         var counter = 0;
         var chart;
@@ -239,41 +257,39 @@
         {
             var e = JSON.parse(event.data); //the data will be retrieved as a JSON string this will parse the data out of that string
             var data = e;
-            if(counter == 100)
+		//	console.log(data)
+
+            if(counter == 20)
             {
-                          scale(historical);    
+			  shiftUpdate(historical)
+              scale(historical);    
               buildChart(historical);
-              setInterval(function()
+				  setInterval(function()
               {
-              // update(current)
-                current.shift()
-              },1000)
+					
+			   update(current)
+              },200)
+            
                 counter = 0;
             }
-            else if (data !== null && typeof data === 'object' && isLoaded == false) //if the data recieved is not null and is of type object
+            else if (data !== null && typeof data === 'object') //if the data recieved is not null and is of type object
             {
-                if (data.Tag == "One Minute")
-                {
+              
                     historical.push(data)
                
              
                    counter++
 
-                } 
-                else if (data !== null && typeof data === 'object' && isLoaded == false)
-                {
-                    fiveHistorical.push(data);
-                    counter++
                 }
-            } 
-            else
+             
+            else  if (data !== null && typeof data === 'number')
             {
             current.push(data);
-                console.info(current)
-       //    updateBar();
-                
+            current.shift()
+             //   console.log(current)
             }
         }
+		
         
         webSocket.close = function (event) 
         {
@@ -283,27 +299,12 @@
       
                 var target = document.getElementById('#chart');
 
-                function init() {
-
-                    // trigger loader
-                    var spinner = new Spinner(opts).spin(target);
-
-                        spinner.stop();
-                        
-                    setTimeout(function()
-                    {scale(historical)
-                     buildChart(historical)
-                     updateBar},1000)
-                       
-                    };
-                
-
-              //  init();
-           
+               
 
             chart = d3.select("#chart").append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
+			.attr("id", "svg")
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -328,15 +329,16 @@
 				 .attr("clip-path", "url(#clip)")
                  .append("g")
                  .attr("class", "candlesticks")
+               	
 
 
             function buildChart(array)
             {
                 
-               	
-                 
+                 var a = candlestick.append("g").attr("class", "historical")
 
-                wicks = candlestick.selectAll("wick")
+console.log("build Chart called!")
+                wicks = a.selectAll("wick")
                 .data(array)
                 .enter()
                 .append("line")
@@ -350,8 +352,8 @@
                 .attr("y1", function (d) {
                     return y(max(d.High, d.Low));
                 })
-                .attr("y2", function (d) {
-                    return y(min(d.High, d.Low));
+                .attr("y2",  function (d) {
+                    return y(max(d.High, d.Low));
                 })
                 .attr("stroke", function (d) {
                     return d.Open > d.Close ? "#a01f1b" : "#1ba048";
@@ -361,15 +363,12 @@
 				 .attr("x2", function (d, i) {
                     return candleMargin + candleWidth / 2 + (candleGap * i);
                 })
-				 .attr("y2", function (d) {
-                    return y(min(d.High, d.Low));
-                }).delay(function(d, i) {
-                      return i * 100;
-                    })
-                    .ease("linear")
+				 .attr("y2", function (d) {return y(min(d.High, d.Low));})
+				 .delay(function(d, i) {return i * 50;})
+                 .ease("exp")
                   
 
-             candle = candlestick.selectAll("rect")
+             candle = a.selectAll("rect")
                 .data(array)
                 .enter()
                 .append("rect")
@@ -392,50 +391,54 @@
 			 	.attr("height", function (d) {
                     return y(min(d.Open, d.Close)) - y(max(d.Open, d.Close))})
                     .delay(function(d, i) {
-                      return i * 100;
+                      return i * 50;
                     })
-                    .ease("linear")
-                    //history.selectAll("objects").on("mouseover", console.log("hello"))
+                    .ease("exp")
         }
-                    
-                    
-           function update(current) {
-    
-               var liveOffset = historical.length * (candleWidth + candleMargin)
+                    			   live = candlestick.append("g").attr("class", "live")
 
-               rect = live.selectAll("rect").data([current])
+                    
+           function update(current) 
+			{
+    
+				 rect = live.selectAll("rect").data(current)
                
                 rect.enter()
                 .append("rect")
                 .attr("class", "objects")
-                .attr("x",liveOffset)
-                .attr("y", historical[historical.length-1].Close)
-                .attr("height", function (d) {
-                    return updateScale(d);
-                    console.log(updateScale(d))
-                })
+                .attr("x", liveXoffset)
+                .attr("y", liveYoffset)
+                .attr("height", 0)
                 .attr("width", function (d) {
                     return candleWidth
                 })
-                .attr("fill", "#1ba048")
-                .style("pointer-events", "none").transition()
-                    .delay(function(d, i) {
-                      return i * 800;
-                    })
-                    .ease("elastic");
+                .attr("fill", "steelblue")
+                .style("pointer-events", "none")
         
- 			rect.transition()
- 				.duration(1000)
- 				.ease('linear')
- 				.attr("height", function (d) {
- 					return d
- 				});
+ 			  rect.transition()
+				.duration(200)
+				.ease('linear')
+			  	.attr("x", liveXoffset)
+			    .attr("y", liveYoffset)
+				.attr("height", function (d)
+			    {
+				 return d
+				})
+			
+			
+				rect.exit();
  			
- 			//console.log(bardata);
+ 			//console.log(current);
  		}     
                     
                     
-                    
+           document.getElementById("svg").onmouseup = function()
+		   {
+			   
+			    scale(fiveHistorical)
+				
+		   }
+		  
         function min(a, b)
         {
             return a < b ? a : b;
@@ -445,14 +448,18 @@
         {
         return a > b ? a : b;
         };
+					
+					
+					
+					
         
         function scale(array)
         {
-             maxi = d3.max(array, function (d)
+			var b = array.slice(0,21)
+             maxi = d3.max(b, function (d)
             {
             return d.value;
             });
-
              maxLow = d3.min(array.map(function (x)
             {
                 return x["Low"];
@@ -463,33 +470,26 @@
             }))
              
             maxMinDiff = (maxHigh - maxLow) * 0.1;
-
            
-
              xAxis = d3.svg.axis()
                 .scale(x)
                 .orient("bottom")
                 .tickSize(-height);
-
             yAxis = d3.svg.axis()
                 .scale(y)
                 .orient("left")
                 .ticks(5)
                 .tickSize(-width);
-
-             x = d3.scale.linear().domain([-width / 2, width / 2]).range([0, width]);
-
+			
+             x = d3.scale.linear().domain([-width / 2, width / 2]).range([0, width]).nice();
              y = d3.scale.linear()
                 .domain([maxLow - maxMinDiff, maxHigh + maxMinDiff]) //changed to reflect new variables for lowest, highest and difference to define input domain
-                .range([height, 0]); //range has still not been modified ... remember x,y have been reversed to reflect y,x
-
-
+                .range([height, 0]).nice(); //range has still not been modified ... remember x,y have been reversed to reflect y,x
              zoom = d3.behavior.zoom()
                 .x(x)
                 .y(y)
                 .scaleExtent([1, 32])
                 .on("zoom", zoomed);
-
                 chart.append("rect")
                 .attr("class", "pane")
                 .attr("width", width)
@@ -497,7 +497,6 @@
                 .call(zoom)
                 .style("fill", "none")
                 .style("pointer-events", "all");
-
                 lines = grid.selectAll("line.y")
                 .data(y.ticks(20))
                 .enter()
@@ -508,7 +507,6 @@
                 .attr("y1", y)
                 .attr("y2", y)
                 .attr("stroke", hLineColor);
-
                numbers = grid.selectAll("text.yrule")
                 .data(y.ticks(10))
                 .enter()
@@ -520,82 +518,50 @@
                 .attr("dx", 20)
                 .style("fill", "#b5b6b7")
                 .attr("text-anchor", "middle")
-
         }
+        
         
         window.onload = function()
         {
         document.getElementById("OneMinButton").addEventListener("click", function()
             {
-                d3.selectAll("rect.pane").remove();
-                d3.select(".candlesticks").remove();
-                scale(historical)
-                buildChart(historical)
-                console.log("clicked!")
+                d3.selectAll(".y").remove();
+				d3.selectAll(".historical").remove();
+					shiftUpdate(historical)
+                    scale(historical)
+					buildChart(historical)
+               // console.log(historical.length)
             });
          document.getElementById("FiveMinButton").addEventListener("click", function()
             {
-                fiveHistorical = []
-               $.get('/data', function(data, status)
-                {
-                   data.forEach(function(d){
-                    fiveHistorical.push(d)
-                    
-                   })
-                    scale(fiveHistorical)
-                buildChart(fiveHistorical)
-                });
-                d3.select(".candlesticks").remove();
+			   d3.selectAll(".historical").remove();
+//               $.get('/data', function(data, status)
+//                {
+//				   
+//					fiveHistorical = data
+//					
+//                });
+			        shiftUpdate(fiveHistorical)
+			        scale(fiveHistorical)
+					buildChart(fiveHistorical)
               
-                console.log("clicked!")
+                console.log("length of array is " + fiveHistorical.length)
                
-                
         });
         }
+		
+		function shiftUpdate(array)
+		{
+		   
+		   liveXoffset =  candleMargin + ((array.length) * candleGap)
+		   liveYoffset = array[array.length-1].Close;
+		}
         
-        function loadingBar()
-        {
-            var bar = new ProgressBar.SemiCircle(chart, {
-            strokeWidth: 6,
-            color: '#FFEA82',
-            trailColor: '#eee',
-            trailWidth: 1,
-            easing: 'easeInOut',
-            duration: 1400,
-            svgStyle: null,
-            text: {
-                value: '',
-                alignToBottom: false
-            },
-            from: {
-                color: '#a01f1b'
-            },
-            to: {
-                color: '#1ba048'
-            },
-            // Set default step function for all animate calls
-            step: (state, bar) => {
-                bar.path.setAttribute('stroke', state.color);
-                var value = Math.round(bar.value() * 100);
-                if (value === 0) {
-                    bar.setText('');
-                } else {
-                    bar.setText(value);
-                }
-
-                bar.text.style.color = state.color;
-            }
-        });
-        bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
-        bar.text.style.fontSize = '2rem';
-
-        bar.animate(1.0); // Number from 0.0 to 1.0 
-            
-        }
 
         function zoomed() 
 		{
           candlestick.attr("transform", "translate(" + d3.event.translate[0] + ")")
+		  console.log("translate it: " + d3.event.translate[0])
         }
                     
                     $(document).ready(function()
@@ -608,7 +574,16 @@
                     
                         
                         
-                    
+                    setInterval(function()
+					{
+					$.get('/current', function(data, status)
+                	{
+				   
+					 console.log(data)
+					 data = [];
+					
+                	});	
+					},60000)
 
             
                 </script>
@@ -619,7 +594,7 @@
 
         <div class="col-lg-2 col-md-1">
             <div class="rightpanel" id="right">
-                <h2>right panel</h2>
+<!--                <h2>right panel</h2>-->
             </div>
         </div>
 
@@ -685,7 +660,7 @@
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="scripts/bootstrap.min.js"></script>
+ 
 
 
 </body>

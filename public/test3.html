@@ -1,89 +1,83 @@
 <html>
 <script type="text/javascript" src="js/d3.min.js"></script>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
 
 
 <body>
-
+<style>path {
+    stroke: black;
+    fill: none;
+}
+.avg {
+    stroke: #ff0000;    
+}</style>
 	<script>
 
-		var t = 1297110663, // start time (seconds since epoch)
-			v = 70, // start value (subscribers)
-			data = d3.range(33).map(next); // starting dataset
+	movingAvg = function (data, neighbors) {
+  return data.map((val, idx, arr) => {
+    let start = Math.max(0, idx - neighbors), end = idx + neighbors
+	console.log("start is: " + start)
+	console.log("end is " + end)
+    let subset = arr.slice(start, end + 1)
+	console.log("subset is: " + subset)
+    let sum = subset.reduce((a,b) => a + b)
+	console.log("sum is: " + sum)
+    return sum / subset.length
+  })
+}
 
-		function next() {
-			return Math.floor(Math.random()*100)
-		}
+var data = [3, 66, 2, 76, 5, 20, 1, 30, 50, 9, 80, 5, 7,3, 66, 2, 76, 5, 20, 1, 30, 50, 9, 80, 5, 7,3, 66, 2, 76, 5, 20, 1, 30, 50, 9, 80, 5, 7]
+var dataAvg = movingAvg(data, 1)
 
-		setInterval(function () {
-			data.shift();
-			data.push(next());
-			redraw();
-		}, 1500);
-		
-		
-		 var w = 20,
-			 h = 80;
-  
-  var x = d3.scale.linear()
-      .domain([0, 1])
-      .range([0, w]);
-  
-  var y = d3.scale.linear()
-      .domain([0, 100])
-     .rangeRound([0, h]);
-		
-		
-	var chart = d3.select("body")
-   .append("svg:svg")
-     .attr("class", "chart")
-     .attr("width", w * data.length - 1)
-     .attr("height", h);	
-		
-		
-	 chart.selectAll("rect")
-     .data(data)
-	 .enter().append("svg:rect")
-     .attr("x", function(d, i) { return x(i) - .5; })
-     .attr("y", function(d) { return h - y(d) - .5; })
-     .attr("width", w)
-     .attr("height", function(d) { return y(d); })
-	 .attr("fill", "steelblue")	
-	 .attr("stroke", "white")
-	 
-	 
-	chart.append("svg:line")
-     .attr("x1", 0)
-     .attr("x2", w * data.length)
-     .attr("y1", h - .5)
-     .attr("y2", h - .5)
-     .attr("stroke", "#000");
-		
-	 function redraw() {
-   var rect = chart.selectAll("rect")
-        .data(data, function(d) { return d; });
-  
-    rect.enter().insert("svg:rect", "line")
-        .attr("x", function(d, i) { return x(i + 1) - .5; })
-        .attr("y", function(d) { return h - y(d) - .5; })
-        .attr("width", w)
-       .attr("height", function(d) { return y(d); })
-     .transition()
-       .duration(1000)
-       .attr("x", function(d, i) { return x(i) - .5; });
- 
-   rect.transition()
-       .duration(1000)
-       .attr("x", function(d, i) { return x(i) - .5; });
- 
-   rect.exit().transition()
-       .duration(1000)
-       .attr("x", function(d, i) { return x(i - 1) - .5; })
-       .remove();
- 
- }
-		
-		
+console.log(data.length, data)
+console.log(dataAvg.length, dataAvg)
+
+var w = 20,
+    h = 80
+
+var x = d3.scaleLinear()
+    .domain([0, 0.1])
+    .range([0, w])
+    
+var y = d3.scaleLinear()
+    .domain([0, 100])
+    .rangeRound([h, 0])
+
+
+var straightLine = d3.line()
+    .x((d,i) => x(i))
+    .y(d => y(d))
+    
+var curvedLine = d3.line()
+    .x((d,i) => x(i))
+    .y(d => y(d))
+    .curve(d3.curveBasis)
+
+window.onload = function()
+{
+	var chart = d3.select("body").append("svg")
+		.attr("class", "chart")
+		.attr("width", w * data.length -1)
+		.attr("height", h + 200)
+
+	
+var chunky = 	chart
+		.append('path')
+		.attr('class', 'avg')
+		.datum(dataAvg)
+		.attr('d', straightLine)
+
+chunky.transition().duration(4000).attr("d",curvedLine)
+
+
+	chart
+		.append('path')
+		.datum(data)
+		.attr('d', straightLine)
+}
+
+
 		
 		
 		

@@ -5,7 +5,9 @@ var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 var PerlinGenerator = require("proc-noise");
 var Perlin = new PerlinGenerator(); // seeds itself if no seed is given as an argument 
-
+var	data = [];
+var oneArray = []; // will hold every value generated every second for one minute 
+var current = []
 
       
 var wss = new ws({
@@ -19,63 +21,50 @@ var wss = new ws({
 
 
 
-
+setInterval(function()
+{
+	insertData(oneArray)
+	oneArray = []
+}, 60000)
 wss.on("connection", function  (ws)
 {
 	var beginning = 250
 	var t = 0.000000000000001;
-	var oneArray = []; // will hold every value generated every second for one minute 
-	var fiveArray = []; //will hold every value generated every second for five minutes
-	var oneMin = "One Minute"
-	var fiveMin = "Five Minutes"
-	
-	MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
+	var data = [];
+		MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
 
 		assert.equal(err,null) //check to see if there any errors connecting to the database
-		var cursor = db.collection('stockData').find().limit(50); // cursor will be an array of objects retrieved from the database
+		var cursor = db.collection('stockData').find().limit(200) // cursor will be an array of objects retrieved from the database
 		cursor.forEach(function(doc, err){ //loop through the cursor
 			assert.equal(null,err) //check for errors
-			//retrieveArray.push(doc); //push each document the cursor points toward to the retrieveArray
-			ws.send(JSON.stringify(doc), function(error){})
-			
+			ws.send(JSON.stringify(doc))
 		}, function(){ 
 			db.close(); //close the database once the query is finished
-			generateData(); //call the generate data function to start sending values to client
+			generateData()
 		});
 	});
+	
 	function generateData()
 	{
-		var x = Math.floor(Math.random()*100);
+		var x = (Math.random(100,130));
+		x.toFixed(2)
 		var data = beginning + Perlin.noise(t);
 		oneArray.push(x)
-		fiveArray.push(x)
 		var msg = JSON.stringify(x);
-//		ws.send(msg, function(error)
-//		{
-//            if(error)
-//            {    
-//			//console.error(error)//Prevents the server from crashing if connection drops
-//            }
-//		})
-        
-     if(fiveArray.length == 300){
-		//insertData(oneArray, oneMin)
-		//insertData(fiveArray, fiveMin)
-		fiveArray = [];
-	    oneArray = [];
-     }
-	else if(oneArray.length == 60) //The length of the array will act as a counter to when the data should be inserted i.e if the length of the array is 60, 60 seconds will have passed.
-	{	
-		//insertData(oneArray, oneMin) //calling function to insert data to mongo on a per minute basis
-		oneArray = []; // wipe the array of all current index's this will reset the counter for the next minute
-	}
-	
+		ws.send(msg, function(error)
+		{
+            if(error)
+            {    
+			//console.error(error)//Prevents the server from crashing if connection drops
+            }
+		})
+
 		
 	setTimeout(function()
 	{
 		generateData()
 		
-	},1000)
+	},200)
 	
 	}
 	
@@ -94,9 +83,8 @@ wss.on("connection", function  (ws)
      return a - b;
 	}
 
-function insertData(array, t)
+function insertData(array)
 {
-	var tag = t;
 	var currentdate = new Date(); 
 	var datetime =  currentdate.getDate() + "/"
                 + (currentdate.getMonth()+1)  + "/" 
@@ -111,7 +99,7 @@ function insertData(array, t)
 	// console.log(high)
 	var low = array[0];
 	// console.log(high)
-	var obj = {"Date": datetime, "High": high, "Low": low, "Open": open, "Close": close,  "Tag": tag};
+	var obj = {"Date": datetime, "High": high, "Low": low, "Open": open, "Close": close};
 	//console.log(obj)
 	var url = 'mongodb://localhost:27017/stockData'; 
 	// Use connect method to connect to the Server
@@ -131,21 +119,83 @@ function insertData(array, t)
 	});
 }
 
-
+function makeFiveObjs(array)
+{
+	
+}
 
 console.log("WebSocket Server running on port 3000")
 console.log("Web Server running on port 8081")
 
 app.use(express.static('public')); //set up express to send static files
-app.get('/MainFile.html', function (req, res) {
+app.get('/', function (req, res) {
 	res.sendFile(__dirname + "/" + "index.html");
 })
 
+app.get('/data', function(req, res){
+   	MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
+		assert.equal(err,null) //check to see if there any errors connecting to the database
+		var cursor = db.collection('stockData').find().limit(100) // cursor will be an array of objects retrieved from the database
+		cursor.forEach(function(doc, err){ //loop through the cursor
+			assert.equal(null,err) //check for errors
+			//retrieveArray.push(doc); //push each document the cursor points toward to the retrieveArray
+			data.push(doc);
+		}, function(){ 
+			db.close(); //close the database once the query is finished
+			var a;
+			var h = 0;
+			var l = 0;
+			var o = 0; 
+			var c = 0;
+			for(var i = 0; i < data.length/5; i++)
+			{
+			 a = data.splice(0,5)
+			 for(var j = 0; j < a.length; j++)
+			  {
+				h += a[j].High;
+				l += a[j].Low;
+				o = a[j].Open;
+				c += a[j].Close;
 
-app.get("5minute", getData())
+			  }
+			  h/5;
+			  l/5;
+			  o/5;
+			  c/5;
+			var obj = {"High": h, "Low": l, "Open": o, "Close": c};
+				data.push(obj)
+				h=0
+				l=0;
+				o=0;
+				c=0;
+				console.log(data)
+			}
+		    res.status(200).send(data)
+
+	
+		});
+	});
+})
+
+app.get('/current', function(req, res){
+   	MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
+		assert.equal(err,null) //check to see if there any errors connecting to the database
+		var cursor = db.collection('stockData').find().limit(1) // cursor will be an array of objects retrieved from the database
+		cursor.forEach(function(doc, err){ //loop through the cursor
+			assert.equal(null,err) //check for errors
+			//retrieveArray.push(doc); //push each document the cursor points toward to the retrieveArray
+			current.push(doc);
+		}, function(){ 
+			db.close(); //close the database once the query is finished
+		    res.status(200).send(current)
+		});
+	});
+})
+
 var server = app.listen(8081, function () {
 	var host = server.address().address
 	var port = server.address().port
 
 })
+
 

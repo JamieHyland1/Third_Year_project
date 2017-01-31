@@ -7,11 +7,14 @@
         shape-rendering: crispEdges;
         /*background-color: #1c1f24;*/
     }
+	.avg {
+    stroke: #ff0000;    
+}
 </style>
 
 <head>
     <script type="text/javascript" src="http://d3js.org/d3.v2.min.js"></script>
-    <script type="text/javascript" src="http:/ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http:/ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
 
 
 </head>
@@ -73,10 +76,10 @@
                 Close: 102.71
             }, {
                 Date: 04 / 02 / 16,
-                High: 97.33,
-                Low: 95.19,
-                Open: 95.86,
-                Close: 96.6
+                High: 107.33,
+                Low: 105.19,
+                Open: 105.86,
+                Close: 106.6
             }];
 
     var maxi = d3.max(data, function(d) {
@@ -165,7 +168,7 @@
       .attr("class", "pane")
       .attr("width", width)
       .attr("height", height)
-      .call(zoom)
+    //  .call(zoom)
       .style("fill","none")
       .style("pointer-events", "all");
 
@@ -223,6 +226,52 @@
 
     } 
     buildChart(data);
+		movingAvg = function (data, neighbors) {
+  return data.map((val, idx, arr) => {
+    let start = Math.max(0, idx - neighbors), end = idx + neighbors
+	console.log("start is: " + start)
+	console.log("end is " + end)
+    let subset = arr.slice(start, end + 1)
+	console.log("subset is: " + subset)
+    let sum = subset.reduce((a,b) => a + b)
+	console.log("sum is: " + sum)
+    return sum / subset.length
+  })
+}	
+		
+	var band = []
+
+	for(var i = 0; i < data.length; i++)
+	{
+		band.push(data[i].Close)
+	}
+		var dataAvg = movingAvg(band, 1)	
+	
+	var avgX = d3.scaleLinear()
+    .domain([0, 1])
+    .range([0, data.length-1])
+    
+var avgY = d3.scaleLinear()
+    .domain([0, 100])
+    .rangeRound([height, 0])
+
+
+var straightLine = d3.line()
+    .x((d,i) => avgX(i))
+    .y(d => avgY(d))
+    
+var curvedLine = d3.line()
+    .x((d,i) => avgX(i))
+    .y(d => avgY(d))
+    .curve(d3.curveBasis)
+	
+	var chunky = chart
+		.append('path')
+		.attr('class', 'avg')
+		.datum(dataAvg)
+		.attr('d', curvedLine)
+
+
 
 
     function zoomed() {
