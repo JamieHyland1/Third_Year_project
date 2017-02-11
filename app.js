@@ -4,6 +4,13 @@ var app = express() // initialise express
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 var PerlinGenerator = require("proc-noise");
+var url = 'mongodb://127.0.0.1:27017/stockData'; 
+var Promise = require('bluebird');
+var mongodb = require('mongodb');
+var MongoClient = mongodb.MongoClient;
+var db = mongodb.Collection;
+Promise.promisifyAll(db.prototype);
+Promise.promisifyAll(MongoClient);
 var Perlin = new PerlinGenerator(); // seeds itself if no seed is given as an argument 
 var	data = [];
 var oneArray = []; // will hold every value generated every second for one minute 
@@ -14,7 +21,6 @@ var wss = new ws({
 	port: 3000
 }); //set the WebSocket Server to port 3000
 
-	var url = 'mongodb://127.0.0.1:27017/stockData'; 	
 
 
 //=============================================================================================================================================
@@ -29,26 +35,29 @@ setInterval(function()
 wss.on("connection", function  (ws)
 {
 	var beginning = 250
-	var t = 0.000000000000001;
 	var data = [];
-		MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
-
-		assert.equal(err,null) //check to see if there any errors connecting to the database
-		var cursor = db.collection('stockData').find().limit(200) // cursor will be an array of objects retrieved from the database
-		cursor.forEach(function(doc, err){ //loop through the cursor
-			assert.equal(null,err) //check for errors
-			ws.send(JSON.stringify(doc))
-		}, function(){ 
-			db.close(); //close the database once the query is finished
-			generateData()
-		});
-	});
+var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
+.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 100 })})
+.then(function(doc){doc.forEach(function(doc){ws.send(JSON.stringify(doc));})})
+.then(function(){generateData()})
+.catch(function(err){
+ console.log(err)}); 
 	
 	function generateData()
 	{
-		var x = (Math.random(100,130));
-		x.toFixed(2)
-		var data = beginning + Perlin.noise(t);
+		var rnd = Math.random().toFixed(2)
+		var data = Perlin.noise(Math.random());
+		var x = beginning + data
+		if(rnd == 0.25)
+		{
+		beginning++;	
+	//	console.log("plus 1")
+		}
+		else if(rnd == 0.50)
+		{
+		beginning--;
+		//console.log("minus 1 ")
+		}
 		oneArray.push(x)
 		var msg = JSON.stringify(x);
 		ws.send(msg, function(error)
@@ -64,7 +73,7 @@ wss.on("connection", function  (ws)
 	{
 		generateData()
 		
-	},200)
+	},500)
 	
 	}
 	
@@ -133,54 +142,38 @@ app.get('/', function (req, res) {
 })
 
 app.get('/data', function(req, res){
-   	MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
-		assert.equal(err,null) //check to see if there any errors connecting to the database
-		var cursor = db.collection('stockData').find().limit(100) // cursor will be an array of objects retrieved from the database
-		cursor.forEach(function(doc, err){ //loop through the cursor
-			assert.equal(null,err) //check for errors
-			//retrieveArray.push(doc); //push each document the cursor points toward to the retrieveArray
-			data.push(doc);
-		}, function(){ 
-			db.close(); //close the database once the query is finished
-			var a;
-			var h = 0;
-			var l = 0;
-			var o = 0; 
-			var c = 0;
-			for(var i = 0; i < data.length/5; i++)
+  var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
+.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 100 })})
+.then(function(doc){doc.forEach(function(doc){data.push(doc)})})
+.then(function(){ 
+			var open
+			var close
+			var high
+			var low
+
+			for(var i = 0; i < data.length/2; i++)
 			{
 			 a = data.splice(0,5)
-			 for(var j = 0; j < a.length; j++)
-			  {
-				h += a[j].High;
-				l += a[j].Low;
-				o = a[j].Open;
-				c += a[j].Close;
-
-			  }
-			  h/5;
-			  l/5;
-			  o/5;
-			  c/5;
-			var obj = {"High": h, "Low": l, "Open": o, "Close": c};
-				data.push(obj)
-				h=0
-				l=0;
-				o=0;
-				c=0;
-				console.log(data)
+			 open = a[0].Open;
+			 close = a[4].Close;
+			 var highValues = a.map(function(o) { return o.High; });
+			 high =  Math.max.apply(null, highValues);
+			 var lowValues = a.map(function(o) { return o.Low; });
+			 low = Math.min.apply(null, lowValues);
+			 var obj = {"High": high, "Low": low, "Open": open, "Close": close}
+			 data.push(obj)
 			}
 		    res.status(200).send(data)
-
-	
-		});
-	});
+			data = [];
+		})
+.catch(function(err){
+ console.log(err)}); 
 })
 
 app.get('/current', function(req, res){
    	MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
 		assert.equal(err,null) //check to see if there any errors connecting to the database
-		var cursor = db.collection('stockData').find().limit(1) // cursor will be an array of objects retrieved from the database
+		var cursor = db.collection("stockData").find().limit(1).sort({"Date":-1}) // cursor will be an array of objects retrieved from the database
 		cursor.forEach(function(doc, err){ //loop through the cursor
 			assert.equal(null,err) //check for errors
 			//retrieveArray.push(doc); //push each document the cursor points toward to the retrieveArray
@@ -188,6 +181,8 @@ app.get('/current', function(req, res){
 		}, function(){ 
 			db.close(); //close the database once the query is finished
 		    res.status(200).send(current)
+			console.log(current)
+			current = [];
 		});
 	});
 })
@@ -197,5 +192,9 @@ var server = app.listen(8081, function () {
 	var port = server.address().port
 
 })
+
+
+
+ 
 
 
