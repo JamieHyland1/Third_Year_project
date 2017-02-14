@@ -14,7 +14,7 @@
 
 <head>
     <script type="text/javascript" src="http://d3js.org/d3.v2.min.js"></script>
-    <script type="text/javascript" src="http:/ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
+    <script type="text/javascript" src="http:/ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 
 
 </head>
@@ -36,51 +36,346 @@
           var margin = {top: 20, right: 20, bottom: 20, left: 60},
           width = 940 - margin.left - margin.right,
           height = 640 - margin.top - margin.bottom;
-
+var rand = [];
 
     var data = [{
                 Date: 01 / 12 / 15,
-                High: 118.81,
-                Low: 116.86,
-                Open: 118.75,
-                Close: 117.34
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
             }, {
                 Date: 02 / 12 / 15,
-                High: 118.11,
-                Low: 116.08,
-                Open: 117.05,
-                Close: 116.28
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 2.99,
+                Low: 0.0007,
+                Open: 1.75,
+                Close: 1.04
             }, {
-                Date: 03 / 12 / 15,
-                High: 116.79,
-                Low: 114.22,
-                Open: 116.55,
-                Close: 115.2
+                Date: 02 / 12 / 15,
+                High: 5.976,
+                Low: 0.001,
+                Open: 1.514,
+                Close: 3.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
             }, {
-                Date: 04 / 12 / 15,
-                High: 119.25,
-                Low: 115.11,
-                Open: 115.29,
-                Close: 119.03
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 13.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 12.04
             }, {
-                Date: 07 / 12 / 15,
-                High: 119.86,
-                Low: 117.81,
-                Open: 118.98,
-                Close: 118.28
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            },{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
             }, {
-                Date: 05 / 01 / 16,
-                High: 105.85,
-                Low: 102.41,
-                Open: 105.75,
-                Close: 102.71
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 2.99,
+                Low: 0.0007,
+                Open: 1.75,
+                Close: 1.04
             }, {
-                Date: 04 / 02 / 16,
-                High: 107.33,
-                Low: 105.19,
-                Open: 105.86,
-                Close: 106.6
-            }];
+                Date: 02 / 12 / 15,
+                High: 5.976,
+                Low: 0.001,
+                Open: 1.514,
+                Close: 3.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 13.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 12.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            },{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 2.99,
+                Low: 0.0007,
+                Open: 1.75,
+                Close: 1.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 5.976,
+                Low: 0.001,
+                Open: 1.514,
+                Close: 3.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 13.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 12.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            },{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 2.99,
+                Low: 0.0007,
+                Open: 1.75,
+                Close: 1.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 5.976,
+                Low: 0.001,
+                Open: 1.514,
+                Close: 3.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 13.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 12.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            },{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 2.99,
+                Low: 0.0007,
+                Open: 1.75,
+                Close: 1.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 5.976,
+                Low: 0.001,
+                Open: 1.514,
+                Close: 3.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 2.99,
+                Low: 0.0007,
+                Open: 1.75,
+                Close: 1.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 5.976,
+                Low: 0.001,
+                Open: 1.514,
+                Close: 3.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 2.99,
+                Low: 0.0007,
+                Open: 1.75,
+                Close: 1.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 5.976,
+                Low: 0.001,
+                Open: 1.514,
+                Close: 3.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 2.99,
+                Low: 0.0007,
+                Open: 1.75,
+                Close: 1.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 5.976,
+                Low: 0.001,
+                Open: 1.514,
+                Close: 3.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 3.99,
+                Low: 0.007,
+                Open: 0.75,
+                Close: 2.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 4.976,
+                Low: 0.001,
+                Open: 2.514,
+                Close: 2.88
+			},{
+                Date: 01 / 12 / 15,
+                High: 2.99,
+                Low: 0.0007,
+                Open: 1.75,
+                Close: 1.04
+            }, {
+                Date: 02 / 12 / 15,
+                High: 5.976,
+                Low: 0.001,
+                Open: 1.514,
+                Close: 3.88
+			}
+	];
 
     var maxi = d3.max(data, function(d) {
       return d.value;
@@ -168,7 +463,7 @@
       .attr("class", "pane")
       .attr("width", width)
       .attr("height", height)
-    //  .call(zoom)
+      .call(zoom)
       .style("fill","none")
       .style("pointer-events", "all");
 
@@ -226,53 +521,61 @@
 
     } 
     buildChart(data);
-		movingAvg = function (data, neighbors) {
-  return data.map((val, idx, arr) => {
-    let start = Math.max(0, idx - neighbors), end = idx + neighbors
-	console.log("start is: " + start)
-	console.log("end is " + end)
-    let subset = arr.slice(start, end + 1)
-	console.log("subset is: " + subset)
-    let sum = subset.reduce((a,b) => a + b)
-	console.log("sum is: " + sum)
-    return sum / subset.length
-  })
-}	
+
+		 movingAvg = function (data, neighbors)
+ 			  {
+	 			console.log("neighbours is: "+neighbors)
+  				return data.map( function(val, idx, arr)
+				{
+     			let start = Math.max(0, idx - neighbors)
+	 			let end = idx + neighbors
+     			let subset = arr.slice(start, end + 1)
+     			let sum = subset.reduce((a,b) => a + b)
+     			return sum / subset.length
+  				})
+			  }	
 		
-	var band = []
+			  var band = []
+			  
+			  for(var i = 0; i < data.length; i++)
+			  {
+				band.push(data[i].Close)
+				console.log(band[i])
+			  }
+				var dataAvg = movingAvg(band, 1)	
 
-	for(var i = 0; i < data.length; i++)
-	{
-		band.push(data[i].Close)
-	}
-		var dataAvg = movingAvg(band, 1)	
-	
-	var avgX = d3.scaleLinear()
-    .domain([0, 1])
-    .range([0, data.length-1])
+				var avgX = d3.scale
+					.linear()
+				.domain([0, data.length])
+				.range([0, (candleMargin + (candleGap * data.length))])
     
-var avgY = d3.scaleLinear()
-    .domain([0, 100])
-    .rangeRound([height, 0])
+				var avgY = d3.scale
+					.linear()
+					.domain([0, 10])
+					.rangeRound([height, 0])
 
+				var avg = candlestick.append("g").attr("class", "average")
 
-var straightLine = d3.line()
-    .x((d,i) => avgX(i))
-    .y(d => avgY(d))
-    
-var curvedLine = d3.line()
-    .x((d,i) => avgX(i))
-    .y(d => avgY(d))
-    .curve(d3.curveBasis)
-	
-	var chunky = chart
-		.append('path')
-		.attr('class', 'avg')
-		.datum(dataAvg)
-		.attr('d', curvedLine)
+				var curvedLine = 
+					
+					d3.svg.line()
+					.x((d,i) => avgX(i))
+					.y(d => avgY(d))
+					.interpolate("basis")
+						
+						avg.append('path')
+						.attr('class', 'avg')
+						.datum(dataAvg)
+						.attr('d', curvedLine)
+				     	.attr("fill", "none")
+						.attr("stroke", "red")
+						.attr("stroke-width", 1)
 
-
-
+			
+		
+		
+		
+		
 
     function zoomed() {
       candlestick.attr("transform", "translate(" + d3.event.translate[0] + ")")

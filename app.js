@@ -7,6 +7,12 @@ var PerlinGenerator = require("proc-noise");
 var url = 'mongodb://127.0.0.1:27017/stockData'; 
 var Promise = require('bluebird');
 var mongodb = require('mongodb');
+var passport = require('passport');
+var flash    = require('connect-flash');
+var morgan       = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser   = require('body-parser');
+var session      = require('express-session');
 var MongoClient = mongodb.MongoClient;
 var db = mongodb.Collection;
 Promise.promisifyAll(db.prototype);
@@ -15,6 +21,8 @@ var Perlin = new PerlinGenerator(); // seeds itself if no seed is given as an ar
 var	data = [];
 var oneArray = []; // will hold every value generated every second for one minute 
 var current = []
+var value = [];
+var beginning = 250
 
       
 var wss = new ws({
@@ -34,32 +42,18 @@ setInterval(function()
 }, 60000)
 wss.on("connection", function  (ws)
 {
-	var beginning = 250
-	var data = [];
+
+var data = [];
 var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
-.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 100 })})
+.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 100, sort: {_id:-1}})})
 .then(function(doc){doc.forEach(function(doc){ws.send(JSON.stringify(doc));})})
 .then(function(){generateData()})
 .catch(function(err){
  console.log(err)}); 
 	
-	function generateData()
+	setInterval(function()
 	{
-		var rnd = Math.random().toFixed(2)
-		var data = Perlin.noise(Math.random());
-		var x = beginning + data
-		if(rnd == 0.25)
-		{
-		beginning++;	
-	//	console.log("plus 1")
-		}
-		else if(rnd == 0.50)
-		{
-		beginning--;
-		//console.log("minus 1 ")
-		}
-		oneArray.push(x)
-		var msg = JSON.stringify(x);
+		var msg = JSON.stringify(value[0]);
 		ws.send(msg, function(error)
 		{
             if(error)
@@ -67,17 +61,10 @@ var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
 			//console.error(error)//Prevents the server from crashing if connection drops
             }
 		})
-
+		value.shift()
+	},1000)
 		
-	setTimeout(function()
-	{
-		generateData()
-		
-	},500)
 	
-	}
-	
-
 	ws.onclose = function(event)
 	{
 	 console.log("Connection Closed")
@@ -87,7 +74,7 @@ var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
 	
 });
 
-	function sortNumber(a,b) //function to make sure array.sort sorts by size and not alphabetically, if not added array.sort outputs bizarre results
+function sortNumber(a,b) //function to make sure array.sort sorts by size and not alphabetically, if not added array.sort outputs bizarre results
 	{
      return a - b;
 	}
@@ -128,10 +115,6 @@ function insertData(array)
 	});
 }
 
-function makeFiveObjs(array)
-{
-	
-}
 
 console.log("WebSocket Server running on port 3000")
 console.log("Web Server running on port 8081")
@@ -143,7 +126,7 @@ app.get('/', function (req, res) {
 
 app.get('/data', function(req, res){
   var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
-.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 100 })})
+.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 500 })})
 .then(function(doc){doc.forEach(function(doc){data.push(doc)})})
 .then(function(){ 
 			var open
@@ -170,10 +153,11 @@ app.get('/data', function(req, res){
  console.log(err)}); 
 })
 
+
 app.get('/current', function(req, res){
    	MongoClient.connect(url, function(err,db){ //set up connection to mongodb takes two parameters a url for the db and a callback function 
 		assert.equal(err,null) //check to see if there any errors connecting to the database
-		var cursor = db.collection("stockData").find().limit(1).sort({"Date":-1}) // cursor will be an array of objects retrieved from the database
+		var cursor = db.collection("stockData").find().limit(1).sort({"_id":-1}) // cursor will be an array of objects retrieved from the database
 		cursor.forEach(function(doc, err){ //loop through the cursor
 			assert.equal(null,err) //check for errors
 			//retrieveArray.push(doc); //push each document the cursor points toward to the retrieveArray
@@ -187,7 +171,39 @@ app.get('/current', function(req, res){
 	});
 })
 
-var server = app.listen(8081, function () {
+
+function generateData()
+	{
+		var rnd = Math.random().toFixed(2)
+		var data = Perlin.noise(Math.random());
+		var x = beginning + data
+		console.log(x)
+		if(rnd == 0.25)
+		{
+		beginning++;	
+		console.log("plus 1")
+		}
+		else if(rnd == 0.50)
+		{
+		beginning--;
+		console.log("minus 1 ")
+		}
+		oneArray.push(x)
+		value.push(x)
+	
+
+	setTimeout(function()
+	{
+		generateData()
+		
+	},1000)
+	
+	}
+	
+
+
+var server = app.listen(8081, function () 
+{
 	var host = server.address().address
 	var port = server.address().port
 
