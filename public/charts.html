@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+    svg {
+        margin: -15px;
+        font-family: "Open Sans", sans-serif;
+        font-size: 8px;
+        shape-rendering: crispEdges;
+        background-color: #383840;
+    }
+</style>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Stock Watch App Bootstrap</title>
+
+       <script type="text/javascript" src="js/d3.min.js"></script>
+
+    <!--linking style sheet-->
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!--Custom CSS-->
+    <link href="css/custom.css" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="starter-template.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+<!--    <script src="assets/js/ie-emulation-modes-warning.js"></script>-->
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!--Google Fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300|Oswald|Raleway|Roboto|Source+Sans+Pro" rel="stylesheet">
+    <!--font-family: 'Roboto', sans-serif; font-family: 'Open Sans', sans-serif; font-family: 'Oswald', sans-serif; font-family: 'Source Sans Pro', sans-serif; font-family: 'Raleway', sans-serif;-->
+
+    <!--fontawesome for icons-->
+    <script src="https://use.fontawesome.com/5d39a50083.js"></script>
+
+
+
+</head>
+
+<body>
+
+    <nav class="navbar navbar-inverse">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="#" class="navbar-left"><img src="images/watchlogo2.png" class="logo" alt="logo"></a>
+
+                <a class="navbar-brand" href="#">Stock Watch</a>
+
+
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="active"><a href="about.html">About <span class="sr-only">(current)</span></a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="index.html">Sign Out</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </nav>
+
+    <div class="container">
+        <!--row containing add assets button and asset boxes-->
+        <div class="row bluebartop">
+            <div class="col-md-1">
+                <!-- Single button -->
+                <div class="btn-group">
+
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="add asset"><img src="images/signs.png"></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" onclick="applefunction()" id="asset"><i class="fa fa-apple" aria-hidden="true"></i> Apple Inc.</a></li>
+                        <li><a href="#" onclick="microsoftfunction()" id="asset"><i class="fa fa-windows" aria-hidden="true"></i> Microsoft</a></li>
+                        <li><a href="#" onclick="googlefunction()" id="asset"><i class="fa fa-google" aria-hidden="true"></i> Google</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="#" onclick="bitcoinfunction()" id="asset"><i class="fa fa-btc" aria-hidden="true"></i> Bitcoin</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <div class=assetbox id=box></div>
+
+            </div>
+
+
+            <div class="col-md-4">
+                <h1 class="text-right">Candlestick View</h1>
+
+            </div>
+        </div>
+
+        <!--row containing the chart svg-->
+        <div class="row">
+
+            <div class="col-md-12" id="chart" onmouseup="rescale()">
+			<script type="text/javascript">
+                var webSocket = new WebSocket("ws://localhost:3000");
+				webSocket.onopen = function (event)
+				{
+				 console.log('Websocket connection open'); //when the connection is established log this message to the console
+				};
+				
+
+				webSocket.onclose = function ()
+				{
+					console.log("closed")
+				}
+				var isLoaded = false;
+				var candleWidth = 20;
+				var candleGap = 40;
+				var candleMargin = 10;
+				var wickThickness = "2";
+				var hLineColor = "#b5b6b7";
+				var margin =
+				{
+				  top: 10
+				 ,right: 0
+				 ,bottom: 10
+				 ,left: 10
+				}
+				var opts =
+				{
+				  lines: 9, // The number of lines to draw
+				  length: 9, // The length of each line
+				  width: 5, // The line thickness
+				  radius: 14, // The radius of the inner circle
+				  color: '#EE3124', // #rgb or #rrggbb or array of colors
+				  speed: 1.9, // Rounds per second
+				  trail: 40, // Afterglow percentage
+				  className: 'spinner', // The CSS class to assign to the spinner
+				};
+				var width = 1170;
+                var height = 365;
+				var historical = [];
+				var fiveHistorical = [];
+				var liveXoffset;
+				var liveYoffset;
+				var current = [0];
+				var data = [];
+				var counter = 0;
+				var chart;
+				var grid;
+				var candlestick;
+				var maxi;
+				var max;
+				var rect;
+				var live
+				var maxLow;
+				var maxHigh;
+				var maxHigh;
+				var maxMinDiff;
+				var xAxis;
+				var yAxis; 
+				var x;
+				var y;
+				var z;
+				var zoom;
+				var lines;
+				var numbers;
+				var wicks;
+				var candle;
+				var history
+				var historicalOffset
+				var app = {};
+		     	var band = []
+
+				
+				webSocket.onmessage = function (event, err) 
+				{
+					var e = JSON.parse(event.data); //the data will be retrieved as a JSON string this will parse the data out of that string
+					var data = e;
+				//	console.log(data)
+					
+//					if(counter == 100)
+//					{
+//					  scale(historical, 0, historical.length-1);    
+//					  shiftUpdate(historical)
+//					  buildChart(historical);
+//					//  movingAverage(historical)
+//					  
+					
+					  //counter = 0;
+					 if (data !== null && typeof data === 'object') //if the data recieved is not null and is of type object
+					{             
+					  historical.push(data)
+					  console.log(historical)
+					  counter++
+					}
+					else  if (data !== null && typeof data === 'number')
+					{
+					current.push(data);
+						console.log(data)
+					current.shift()
+					
+					}
+				}
+				
+				
+				
+					
+					
+					
+
+				webSocket.close = function (event) 
+				{
+				console.log("connection closed");
+				}
+
+				var target = document.getElementById('#chart');
+
+
+				chart = d3.select("#chart").append("svg")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.attr("id", "svg")
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+				grid = chart.append("g")
+				.attr("class", "gridding");
+
+
+
+			   chart.append("clipPath")
+			   .attr("id", "clip")
+			   .append("rect")
+			   .attr("width", width)
+			   .attr("height", height);
+
+
+			   var updateScale = d3.scale.linear()
+			   .domain([0,d3.max(current)])
+			   .range([0,height])
+
+			   candlestick = chart.append("g")
+			   .attr("id", "clipped")
+			   .attr("clip-path", "url(#clip)")
+			   .append("g")
+			   .attr("class", "candlesticks")
+
+
+
+			   function buildChart(array)
+			   {        
+				 var historicalOffset = candleMargin + (candleGap * array.length);
+				// console.log(historicalOffset)
+				 var a = candlestick.append("g").attr("class", "historical")
+				// console.log("build Chart called!")
+				 wicks = a.selectAll("wick")
+				 .data(array)
+				 .enter()
+				 .append("line")
+				 .attr("class", "objects")
+				 .attr("x1", function (d, i)
+				  {
+				   return (- historicalOffset + 800) + (candleMargin + candleWidth / 2 + (candleGap * i));
+				  })
+				  .attr("x2", function (d, i)
+				   {
+					return (- historicalOffset + 800) + (candleMargin + candleWidth / 2 + (candleGap * i));
+				   })
+				   .attr("y1", function (d)
+				   {
+					 return (y(max(d.High, d.Low)));
+				   })
+			   	   .attr("y2",  function (d)
+				   {
+					 return  (y(max(d.High, d.Low)));
+				   })
+				   .attr("stroke", function (d)
+				   {
+					 return d.Open > d.Close ? "#B20600" : "#00FF58";
+			       })
+				   .attr("stroke-width", wickThickness)
+				   .transition()
+				   .attr("x2", function (d, i)
+				   {
+					 return (- historicalOffset + 800) +  (candleMargin + candleWidth / 2 + (candleGap * i));
+				   })
+				   .attr("y2", function (d) 
+				    {
+					 return    (y(min(d.High, d.Low)));
+				    })
+				   .duration(250)
+				   .ease("exp")
+
+
+					candle = a.selectAll("rect")
+					.data(array)
+					.enter()
+					.append("rect")
+					.attr("class", "objects")
+					.attr("x", function (d, i)
+					{
+					  return (- historicalOffset + 800) + (candleMargin + (candleGap * i));
+					})
+					.attr("y",function (d)
+				    {
+					 return y(max(d.Open, d.Close));
+					})
+					.attr("height", 0)
+					.attr("width", function (d)
+				    {
+					 return candleWidth
+					})
+					.attr("fill", function (d)
+					{
+					  return d.Open > d.Close ? "#B20600" : "#00FF58";
+					})
+					.style("pointer-events", "none")
+					.transition()
+					.attr("height", function (d)
+					{
+					  return y(min(d.Open, d.Close)) - y(max(d.Open, d.Close))
+					})
+				   .duration(250)
+					.ease("exp")
+				}
+
+
+			   live = candlestick.append("g").attr("class", "live")
+			   
+			   
+			   function update(current) 
+				{
+					rect = live.selectAll("rect").data(current)
+					rect.enter()
+					.append("rect")
+					.attr("class", "objects")
+					.attr("x", liveXoffset + 800)
+					.attr("y", liveYoffset)
+					.attr("height", 0)
+					.attr("width", function (d)
+					{
+					  return candleWidth;
+					})
+					.attr("fill", "none")
+					.attr("stroke", "white")
+					.style("pointer-events", "none")
+
+					rect.transition()
+					.duration(500)
+					.ease('linear')
+//					.attr("fill", function (d)
+//					{
+//					  return d > historical[historical.length-1].Close ? "#B20600" : "#00FF58";
+//					})
+					.attr("stroke", function (d)
+					{
+					  return d > historical[historical.length-1].Close ? "#B20600" : "#00FF58";
+					})
+					.attr("x", liveXoffset)
+					.attr("y", liveYoffset)
+					.attr("height", function (d)
+				    {
+					 return  y(min(historical[historical.length-1].Open, d)) - y(max(historical[historical.length-1].Close, d))
+					})
+
+					rect.exit();
+
+				//console.log(current);
+			    }      
+
+			   // document.getElementById("svg").addEventListener("mouseup", console.log("hello world"))
+
+			    function min(a, b)
+			    {
+				return a < b ? a : b;
+			    };
+
+			    function max(a, b)
+			    {
+			     return a > b ? a : b;
+			    };
+
+
+
+
+
+				function scale(array, start, end)
+				{
+			      var a = array.slice(start, end)
+			//	  console.log(a)
+				 maxi = d3.max(a, function (d)
+				 {
+				  return d.value;
+				 });
+				 maxLow = d3.min(a.map(function (x)
+				 {
+				  return x["Low"];
+				 }))
+				 maxHigh = d3.max(a.map(function (x)
+				 {
+				  return x["High"];
+				 }))
+
+				 maxMinDiff = (maxHigh - maxLow) * 0.1;
+
+				 xAxis = d3.svg.axis()
+				.scale(x)
+				.orient("bottom")
+				.tickSize(-height);
+					
+				yAxis = d3.svg.axis()
+				.scale(y)
+				.orient("left")
+				.ticks(5)
+				.tickSize(-width);
+
+				 x = d3.scale
+					 .linear()
+					 .domain([-width / 2, width / 2])
+					 .range([0, width]);
+					
+				 y = d3.scale
+					 .linear()
+					 .domain([maxLow - maxMinDiff, maxHigh + maxMinDiff]) //changed to reflect new variables for lowest, highest and difference to define input domain
+					.range([height, 0]); //range has still not been modified ... remember x,y have been reversed to reflect y,x
+				
+				zoom = d3.behavior.zoom()
+				.x(x)
+				.y(y)
+				//.scaleExtent([1, 1])
+				.on("zoom", zoomed);
+				
+				chart.append("rect")
+				.attr("class", "pane")
+				.attr("id", "pane")
+				.attr("width", width)
+				.attr("height", height)
+				.call(zoom)
+				.style("fill", "none")
+				.style("pointer-events", "all");
+				
+				lines = grid.selectAll("line.y")
+				.data(y.ticks(20))
+				.enter()
+				.append("svg:line")
+				.attr("class", "y")
+				.attr("x1", 0)
+				.attr("x2", width)
+				.attr("y1", y)
+				.attr("y2", y)
+				.attr("stroke", hLineColor);
+			    
+				numbers = grid.selectAll("text.yrule")
+				.data(y.ticks(10))
+				.enter()
+				.append("svg:text")
+				.attr("class", "yrule")
+				.attr("x", 0)
+				.attr("y", y)
+				.attr("dy", 0)
+				.attr("dx", 20)
+				.style("fill", "#b5b6b7")
+				.attr("text-anchor", "middle")
+			    }
+					
+			function movingAverage(array)
+			{
+			  movingAvg = function (data, neighbors)
+ 			  {
+	 		//	console.log("neighbours is: "+neighbors)
+  				return data.map( function(val, idx, arr)
+				{
+     			let start = Math.max(0, idx - neighbors)
+	 			let end = idx + neighbors
+     			let subset = arr.slice(start, end + 1)
+     			let sum = subset.reduce((a,b) => a + b)
+     			return sum / subset.length
+  				})
+			  }	
+		
+			  
+			  for(var i = 0; i < array.length; i++)
+			  {
+				band.push(array[i].Close)
+				//console.log(band[i])
+			  }
+				var dataAvg = movingAvg(band, 1)	
+
+				var x = d3.scale.linear()
+    					.domain([0, array.length])
+						.range([(-historicalOffset + 800), width])
+    
+				var y = d3.scale.linear()
+					.domain([0, height])
+					.range([height,0])
+				
+				var avgX = d3.scale
+						.linear()
+						.domain([0, array.length])
+						.range([0, width])
+    
+				var avgY = d3.scale
+					.linear()
+					.domain([0, height])
+					.range([height,0])
+				
+				//var line = d3.svg.line().x(function(d){return avgX(d)}).y(function(d){return avgY(d)}).interpolate
+
+				var avg = candlestick.append("g").attr("class", "average")
+
+				var straightLine = d3.svg.line()
+				.interpolate("basis")   
+    			.x((d,i) => x(i))
+    			.y(d => y(d))
+				
+				var curvedLine = 
+					
+					d3.svg.line()
+					.x((d,i) => avgX(i))
+					.y(function(d){ return avgY(d)})
+					.interpolate("basis")
+						
+			var path =	avg.append('path')
+						.attr('class', 'avg')
+						.datum(dataAvg)
+						.attr("d", curvedLine)
+						.attr("stroke", "steelblue")
+						.attr("stroke-width", "2")
+						.attr("fill", "none");
+						
+					path.transition()
+                        .duration(400)
+						//.attr("d", curvedLine)
+						//.interpolate("cardinal")
+						//
+//						avg.append('path')
+//						.datum(band)
+//						.transition()
+//                        .duration(400)
+//						.attr('d', straightLine)
+//						.attr("fill", "none")
+//						.attr("stroke", "blue")
+//						.attr("stroke-width", 1)
+
+			
+			}
+					
+			 
+
+			window.onload = function()
+			{
+			 $.get('/test', function(data, status)
+	         { 
+			
+				historical = data; 
+				scale(historical, 0, 99)
+				buildChart(historical)
+				shiftUpdate(historical)
+				setInterval(function()
+					   {		
+					   update(current)
+					   console.log(current)
+					   },1000)
+				
+	          });	
+				
+			 document.getElementById("movingAverage").addEventListener("click", function()
+			 {
+				movingAverage(historical)
+				console.log("moving average");
+			 })
+			 document.getElementById("OneMinButton").addEventListener("click", function()
+			 {
+				d3.selectAll(".y").remove();
+				d3.selectAll(".historical").remove();
+				d3.select(".pane").remove();
+				shiftUpdate(historical)
+				scale(historical, 0, historical.length)
+				buildChart(historical)
+				movingAverage(historical)
+			  });
+			  document.getElementById("FiveMinButton").addEventListener("click", function()
+			  {
+			   d3.selectAll(".y").remove();
+			   d3.selectAll(".historical").remove();
+			   d3.select(".pane").remove();
+	         $.get('/data', function(data, status)
+	         { 
+			
+				fiveHistorical = []
+				fiveHistorical = data
+				scale(fiveHistorical, 80, 99)
+				shiftUpdate(fiveHistorical)
+				buildChart(fiveHistorical)
+				console.log(fiveHistorical)
+			
+	          });
+
+				  				
+
+				  				movingAverage(fiveHistorical)
+
+				console.log("length of array is " + fiveHistorical.length)
+
+				});
+			}
+
+			function shiftUpdate(array)
+			{
+			  historicalOffset = candleMargin + (candleGap * array.length);
+			  liveXoffset =  (- historicalOffset + 800) + (candleMargin + ((array.length) * candleGap))
+			  
+			  liveYoffset = y(max(array[array.length-1].Open , array[array.length-1].Close))
+			}
+
+
+			function zoomed() 
+			{
+			    z =  d3.event.translate[0];
+				console.log(z)
+				if(z >= 0)
+				{
+				
+				candlestick.attr("transform", "translate(" + z + ")")
+				
+				}
+				else if (z < 0) // a bug causes this value to suddenly shoot under 0 so this statement will correct that and recenter the graph is occured
+				{
+					z = 0;
+				candlestick.attr("transform", "translate(" + z + ")")
+
+				}
+								//console.log(z)
+			}
+				
+
+					
+			function rescale()
+			{
+				 if(z >= 842 && z <= 1684 )
+				{
+					candlestick.attr("transform", "translate(" + z + ")")
+				 	d3.selectAll(".y").remove();
+			   		d3.selectAll(".historical").remove();
+					d3.select(".pane").remove();
+					scale(historical, 40, 80);    
+					buildChart(historical);
+					//console.log("hello")
+				}
+				if(z >= 1684 && z <= 2526)
+				{
+					candlestick.attr("transform", "translate(" + z + ")")
+				 	d3.selectAll(".y").remove();
+			   		d3.selectAll(".historical").remove();
+					d3.select(".pane").remove();
+					scale(historical, 20, 60);    
+					buildChart(historical);
+				//	console.log("hello")
+				}
+				if(z >= 2526 && z <= 3368)
+				{
+					candlestick.attr("transform", "translate(" + z + ")")
+				 	d3.selectAll(".y").remove();
+			   		d3.selectAll(".historical").remove();
+					d3.select(".pane").remove();
+					scale(historical, 20, 40);    
+					buildChart(historical);
+					//console.log("hello")
+				}
+				if(z >= 3368)
+				{
+					candlestick.attr("transform", "translate(" + z + ")")
+				 	d3.selectAll(".y").remove();
+			   		d3.selectAll(".historical").remove();
+					d3.select(".pane").remove();
+					scale(historical, 0, 20);    
+					buildChart(historical);
+					console.log("hello")
+				}
+				if(z <= 841 && z >= 0)
+				{
+					candlestick.attr("transform", "translate(" + z + ")")
+				 	d3.selectAll(".y").remove();
+			   		d3.selectAll(".historical").remove();
+					d3.select(".pane").remove();
+					scale(historical, 80, 99);    
+					buildChart(historical);
+					//console.log("hello")
+				}
+			}
+					
+			
+					
+					
+					
+					
+//			setInterval(function()
+//		     {
+//				$.get('/current', function(data, status)
+//				{
+//				 console.log(data);
+//				 historical.push(data[0]);
+//				 historical.shift();
+//				 d3.selectAll(".y").remove();
+//			   	 d3.selectAll(".historical").remove();
+//				 d3.select(".pane").remove();
+//			     rescale()
+//				 shiftUpdate(historical)
+//				 buildChart(historical);
+//				 data = [];
+//				// alert("one minute has passed")
+//
+//				});	
+//			},60000)
+
+
+					</script>
+
+				</div>
+
+        </div>
+
+
+        <!--row containing buttons for pencil, grid, charts and time periods-->
+        <div class="row bluebarbottom">
+            <div class="col-md-1 col-md-offset-1 ">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="draw tool"><img src="images/draw.png"></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">draw tool</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1 ">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="view in grid"><img src="images/squares.png"></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">grid view</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1 ">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="chart views"><img src="images/connection.png"></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Choose A Chart</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="charts.html">Candlestick</a></li>
+                        <li><a href="movingAverage.html">Moving Average</a></li>
+                        <li><a href="bollingerBands2.html">Bollinger Band</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1 col-md-offset-4 ">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" id=txt-btn data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">1h</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">1 hour bar</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" id=txt-btn data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">30m</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">30 minute bar</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" id=txt-btn data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">5m</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">5 minute bar</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" id=txt-btn data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">1m</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">1 minute bar</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.container -->
+
+    <!--footer-->
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 footer">
+                <p class="text-muted">Jamie Hyland and Eleanor Noonan IADT Stock Watch 2017</p>
+            </div>
+        </div>
+    </div>
+
+    <!--script for CHARTS
+========================================================== -->
+  
+    <!--===================END OF CHART SCRIPT==================-->
+
+    <!--script for TOOLTIPS-->
+    <script>
+//        $(function() {
+//            $("[data-toggle = 'tooltip']").tooltip();
+//        });
+    </script>
+
+
+    <!--js for asset boxes-->
+    <script type="text/javascript">
+        function ShowAsset1() {
+            /*var div = document.getElementById("assetbox");*/
+            var img = new Image();
+            var div = document.getElementById("assetbox").innerHTML = "Apple Inc.";
+            img.onload = function() {
+
+                div.appendChild(img);
+            };
+            img.src = 'images/apple.png'
+
+        }
+
+        function ShowAsset2() {
+            document.getElementById("assetbox").innerHTML = "Microsoft"; //it's calling the textarea id repeat for 3 now
+            console.log("microsoft");
+        }
+
+        function ShowAsset3() {
+            document.getElementById("assetbox").innerHTML = "Google"; //it's calling the textarea id repeat for 3 now
+            console.log("google");
+        }
+
+        function ShowAsset4() {
+            document.getElementById("assetbox").innerHTML = "Bitcoin"; //it's calling the textarea id repeat for 3 now
+            console.log("bitcoin");
+        }
+    </script>
+
+    <!--script for ADDING TEXTAREA ASSET BOX AND BUTTON-->
+    <script>
+        function applefunction() {
+            var x = document.createElement("TEXTAREA");
+            var t = document.createTextNode("Apple Inc.");
+            x.appendChild(t);
+            document.body.appendChild(x);
+            document.getElementById(box);
+            box.appendChild(x);
+            var button = document.createElement("button");
+            box.appendChild(button);
+            /*onclick.button = close();*/
+        }
+
+        function microsoftfunction() {
+            var x = document.createElement("TEXTAREA");
+            var t = document.createTextNode("Microsoft");
+            x.appendChild(t);
+            document.body.appendChild(x);
+            document.getElementById(box);
+            box.appendChild(x);
+            var button = document.createElement("button");
+            box.appendChild(button);
+            /*onclick.button = close();*/
+        }
+
+        function googlefunction() {
+            var x = document.createElement("TEXTAREA");
+            var t = document.createTextNode("Google");
+            x.appendChild(t);
+            document.body.appendChild(x);
+            document.getElementById(box);
+            box.appendChild(x);
+            var button = document.createElement("button");
+            box.appendChild(button);
+            /*onclick.button = close();*/
+        }
+
+        function bitcoinfunction() {
+            var x = document.createElement("TEXTAREA");
+            var t = document.createTextNode("Bitcoin");
+            x.appendChild(t);
+            document.body.appendChild(x);
+            document.getElementById(box);
+            box.appendChild(x);
+            var button = document.createElement("button");
+            box.appendChild(button);
+            /*onclick.button = close();*/
+        }
+
+
+        function close() {
+            document.getElementById(box);
+            box.remove();
+        }
+    </script>
+
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script>
+        window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')
+    </script>
+    <script src="js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="assets/js/ie10-viewport-bug-workaround.js"></script>
+</body>
+
+</html>

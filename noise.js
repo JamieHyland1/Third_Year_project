@@ -12,7 +12,10 @@ Promise.promisifyAll(MongoClient);
 var Perlin = new PerlinGenerator();
 
 
-
+setInterval(function()
+{
+	generateData()
+},1000)
 
 //setInterval(function(){
 //
@@ -51,21 +54,21 @@ function generateData()
 //            {    
 //			//console.error(error)//Prevents the server from crashing if connection drops
 //            }
-		
-
-	setTimeout(function()
-	{
-		generateData()
-		
-	},1000)
 }
-generateData()
-//var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
+
+//setInterval(function()
+//{
+//	var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
 //.then(function(db) {
-// return db.collection("stockData").findAsync({},{limit: 5, sort: {_id:-1}})
+// return db.collection("stockData").findAsync({},{limit: 1, sort: {_id:-1}})
+// .then(function(doc){doc.forEach(function(doc){console.log(doc)})})
+//.catch(function(err){console.log(err)})
+//.finally(function(){db.close()})
 //})
-//.then(function(doc){doc.forEach(function(doc){console.log(doc)})})
-//.catch(function(err){console.log(err)}); 
+
+
+
+//},60000)
 
 //MongoClient.connectAsync('mongodb://localhost:27017/stockData')
 //  .then(function (db){

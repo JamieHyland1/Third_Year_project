@@ -1,0 +1,262 @@
+/*Custom CSS for Stop Watch Application 2017*/
+
+
+/*css for nav bar and text on nav bar*/
+
+.logo {
+    width: 80px;
+    height: 40px;
+    padding-top: 10px;
+    padding-right: 10px;
+}
+
+
+/*#tooltip {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 10pt;
+    color: #fbfdfc;
+    background-color: #383840;
+}*/
+
+.navbar.navbar-inverse {
+    background-color: #383840;
+    border-color: #383840;
+    width: 1170px;
+    margin: 0px auto;
+    border-radius: 0px;
+}
+
+.navbar-brand {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 24pt;
+    color: #fbfdfc;
+}
+
+.navbar-toggle {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 24pt;
+    color: #fbfdfc;
+}
+
+.navbar-right {
+    font-family: 'Open Sans', sans-serif;
+    color: #fbfdfc;
+}
+
+.watch {
+    padding-top: 100px;
+    width: 300px;
+    height: 201px;
+}
+
+
+/*watch image on landing page*/
+
+.watch2 {
+    padding-top: 100px;
+    width: 150px;
+    height: 100px;
+}
+
+
+/*textarea#assetbox*/
+
+TEXTAREA {
+    font-family: "Open Sans", sans-serif;
+    font-size: 10px;
+    background-color: #383840;
+    color: #fbfdfc;
+    width: 125px;
+    height: 55px;
+    border: 0.25px solid #fff;
+    margin-top: 12px;
+    text-align: center;
+    padding: 10px;
+    resize: none;
+}
+
+
+/*button for closing assetbox*/
+
+button {
+    background-image: url('../images/error.png');
+    background-repeat: no-repeat;
+    background-color: #383840;
+    width: 25px;
+    height: 25px;
+    margin-left: 2px;
+    margin-right: 2px;
+    border: solid;
+    border-color: #383840;
+}
+
+h1 {
+    padding-top: 20px;
+    font-family: "Open Sans", sans-serif;
+    font-size: 14px;
+    color: #fbfdfc;
+}
+
+h2 {
+    padding-top: 100px;
+    font-family: "Open Sans", sans-serif;
+    font-size: 24px;
+    color: #fbfdfc;
+}
+
+.btn-default {
+    margin-top: 150px;
+    width: 300px;
+    height: 40px;
+    font-family: "Open Sans", sans-serif;
+    border-color: #fbfdfc;
+}
+
+.btn-info {
+    margin-top: 50px;
+    width: 300px;
+    height: 40px;
+    font-family: "Open Sans", sans-serif;
+    background-color: #383840;
+    border-color: #383840;
+    color: #fbfdfc;
+}
+
+.btn-info.active {
+    background-color: #fbfdfc;
+    color: #383840;
+}
+
+.input-group {
+    width: 300px;
+}
+
+
+/*not responding*/
+
+.row.bluebartop {
+    background-color: #057de5;
+    height: 96px;
+}
+
+.row.bluebarbottom {
+    background-color: #057de5;
+    height: 80px;
+}
+
+#white2 {
+    height: 60px;
+}
+
+.row.largebluebackground {
+    background-color: #057de5;
+    height: 216px;
+}
+
+.row.largebluebackground2 {
+    padding-top: 50px;
+    background-color: #057de5;
+    height: 100px;
+}
+
+.row.largebluebackground3 {
+    padding-top: 0px;
+    background-color: #057de5;
+    height: 300px;
+    padding-bottom: 100px;
+}
+
+.row.largebluebackground4 {
+    padding-top: 0px;
+    background-color: #057de5;
+    height: 50px;
+    padding-bottom: 0px;
+}
+
+.row.largebluebackground5 {
+    padding-top: 10px;
+    background-color: #057de5;
+    height: 220px;
+    padding-bottom: 50px;
+}
+
+.form-control {
+    background-color: #057de5;
+    border-left: #fbfdfc;
+    border-right: #fbfdfc;
+    border-bottom: #fbfdfc;
+    border-top-color: #057de5;
+}
+
+.textarea-addon {
+    background-color: #383840;
+    border-top-color: #383840;
+    border-left: #fbfdfc;
+    border-right: #fbfdfc;
+    border-bottom: #fbfdfc;
+}
+
+#submit1 {}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.open>.dropdown-toggle.btn-primary {
+    color: #383840;
+    background-color: #383840;
+    border-color: #fbffdc;
+    box-shadow: none;
+    /*set the color you want here*/
+}
+
+.btn-success:active:focus {
+    color: #383840;
+    background-color: #383840;
+    border-color: #fbffdc;
+}
+
+.footer {
+    height: 60px;
+    background-color: #383840;
+    font-family: "Open Sans", sans-serif;
+    text-align: center;
+}
+
+.text-muted {
+    padding: 20px;
+    color: #fbfdfc;
+}
+
+img {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-primary {
+    width: 40px;
+    height: 40px;
+    background: #383840;
+    border-color: #383840;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-top: 20px;
+}
+
+#txt-btn {
+    font-family: "Open-sans", sans-serif;
+    color: #fbfdfc;
+    font-size: 8pt;
+    padding-bottom: 10px;
+    height: 20px;
+}
+
+#btn-submit1 {
+    font-family: "Open-sans", sans-serif;
+    color: #383840;
+    font-size: 8pt;
+    padding-bottom: 10px;
+    height: 20px;
+}
