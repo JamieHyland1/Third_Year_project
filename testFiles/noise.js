@@ -30,13 +30,13 @@ setInterval(function()
 //		});
 //	});	
 //},60000)
-var beginning = 250;
+var beginning = 500;
 function generateData()
 	{
 		var rnd = Math.random().toFixed(2)
-		var data = Perlin.noise(Math.random());
+		var data = Perlin.noise(Math.random()*5);
 		var x = beginning + data
-		console.log(x)
+		console.log(x.toFixed(2))
 		if(rnd == 0.25)
 		{
 		beginning++;	

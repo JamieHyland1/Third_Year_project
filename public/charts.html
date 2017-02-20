@@ -121,10 +121,112 @@
         <!--row containing the chart svg-->
         <div class="row">
 
-            <div class="col-md-12" id="chart" onmouseup="rescale()">
-			<script type="text/javascript">
+            <div class="col-md-12" id="chart">
+			
+
+				</div>
+
+        </div>
+
+
+        <!--row containing buttons for pencil, grid, charts and time periods-->
+        <div class="row bluebarbottom">
+            <div class="col-md-1 col-md-offset-1 ">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="draw tool"><img src="images/draw.png"></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">draw tool</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1 ">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="view in grid"><img src="images/squares.png"></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">grid view</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1 ">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="chart views"><img src="images/connection.png"></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Choose A Chart</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="charts.html">Candlestick</a></li>
+                        <li><a id="movingAverage" href="movingAverage.html">Moving Average</a></li>
+                        <li><a href="bollingerBands2.html">Bollinger Band</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1 col-md-offset-4 ">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" id="OneHourButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">1h</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">1 hour bar</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-1">
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" id="ThirtyMinButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">30m</button>
+<!--
+                    <ul class="dropdown-menu">
+                        <li><a href="#">30 minute bar</a></li>
+                    </ul>
+-->
+                </div>
+            </div>
+
+            <div class="col-md-1">
+                <!-- Single button -->
+                <div class="btn-group">
+				   <button type="button" class="btn btn-primary" id="FiveMinButton">5m</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">5 minute bar</a></li>
+                    </ul>
+
+                </div>
+            </div>
+
+            <div class="col-md-1">
+                <!-- Single button -->
+                <div class="btn-group">
+                 <button type="button" class="btn btn-primary" id="OneMinButton">1m</button>
+<!--
+                    <ul class="dropdown-menu">
+                        <li><a  id="FiveMinButton">1 minute bar</a></li>
+                    </ul>
+-->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.container -->
+
+    <!--footer-->
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 footer">
+                <p class="text-muted">Jamie Hyland and Eleanor Noonan IADT Stock Watch 2017</p>
+            </div>
+        </div>
+    </div>
+
+    <!--script for CHARTS
+========================================================== -->
+<script type="text/javascript">
                 var webSocket = new WebSocket("ws://localhost:3000");
-				webSocket.onopen = function (event)
+				webSocket.onopen = function (event) //connect to server via websocket
 				{
 				 console.log('Websocket connection open'); //when the connection is established log this message to the console
 				};
@@ -134,6 +236,8 @@
 				{
 					console.log("closed")
 				}
+				
+				//initialising instance variables
 				var isLoaded = false;
 				var candleWidth = 20;
 				var candleGap = 40;
@@ -190,7 +294,6 @@
 				var candle;
 				var history
 				var historicalOffset
-				var app = {};
 		     	var band = []
 
 				
@@ -198,27 +301,11 @@
 				{
 					var e = JSON.parse(event.data); //the data will be retrieved as a JSON string this will parse the data out of that string
 					var data = e;
-				//	console.log(data)
-					
-//					if(counter == 100)
-//					{
-//					  scale(historical, 0, historical.length-1);    
-//					  shiftUpdate(historical)
-//					  buildChart(historical);
-//					//  movingAverage(historical)
-//					  
-					
-					  //counter = 0;
-					 if (data !== null && typeof data === 'object') //if the data recieved is not null and is of type object
-					{             
-					  historical.push(data)
-					  console.log(historical)
-					  counter++
-					}
-					else  if (data !== null && typeof data === 'number')
+				//	console.log(data)								
+					 if (data !== null && typeof data === 'number')
 					{
 					current.push(data);
-						console.log(data)
+						//console.log(data)
 					current.shift()
 					
 					}
@@ -237,9 +324,9 @@
 
 				var target = document.getElementById('#chart');
 
-
+				//create initial svg
 				chart = d3.select("#chart").append("svg")
-				.attr("width", width + margin.left + margin.right)
+				.attr("width", width + margin.right)
 				.attr("height", height + margin.top + margin.bottom)
 				.attr("id", "svg")
 				.append("g")
@@ -257,10 +344,7 @@
 			   .attr("height", height);
 
 
-			   var updateScale = d3.scale.linear()
-			   .domain([0,d3.max(current)])
-			   .range([0,height])
-
+			  
 			   candlestick = chart.append("g")
 			   .attr("id", "clipped")
 			   .attr("clip-path", "url(#clip)")
@@ -282,11 +366,11 @@
 				 .attr("class", "objects")
 				 .attr("x1", function (d, i)
 				  {
-				   return (- historicalOffset + 800) + (candleMargin + candleWidth / 2 + (candleGap * i));
+				   return (- historicalOffset + (width-100)) + (candleMargin + candleWidth / 2 + (candleGap * i));
 				  })
 				  .attr("x2", function (d, i)
 				   {
-					return (- historicalOffset + 800) + (candleMargin + candleWidth / 2 + (candleGap * i));
+					return (- historicalOffset + (width-100)) + (candleMargin + candleWidth / 2 + (candleGap * i));
 				   })
 				   .attr("y1", function (d)
 				   {
@@ -304,7 +388,7 @@
 				   .transition()
 				   .attr("x2", function (d, i)
 				   {
-					 return (- historicalOffset + 800) +  (candleMargin + candleWidth / 2 + (candleGap * i));
+					 return (- historicalOffset + width-100) +  (candleMargin + candleWidth / 2 + (candleGap * i));
 				   })
 				   .attr("y2", function (d) 
 				    {
@@ -321,7 +405,7 @@
 					.attr("class", "objects")
 					.attr("x", function (d, i)
 					{
-					  return (- historicalOffset + 800) + (candleMargin + (candleGap * i));
+					  return (- historicalOffset + width-100) + (candleMargin + (candleGap * i));
 					})
 					.attr("y",function (d)
 				    {
@@ -350,7 +434,7 @@
 			   live = candlestick.append("g").attr("class", "live")
 			   
 			   
-			   function update(current) 
+			   function update(current)  //this function will be used to constantly update the live update bar every second
 				{
 					rect = live.selectAll("rect").data(current)
 					rect.enter()
@@ -510,7 +594,7 @@
 
 				var x = d3.scale.linear()
     					.domain([0, array.length])
-						.range([(-historicalOffset + 800), width])
+						.range([(-historicalOffset + width-100), width])
     
 				var y = d3.scale.linear()
 					.domain([0, height])
@@ -518,7 +602,7 @@
 				
 				var avgX = d3.scale
 						.linear()
-						.domain([0, array.length])
+					.domain([0, array.length])
 						.range([0, width])
     
 				var avgY = d3.scale
@@ -578,10 +662,12 @@
 				scale(historical, 0, 99)
 				buildChart(historical)
 				shiftUpdate(historical)
+				movingAverage(historical)
+
 				setInterval(function()
 					   {		
 					   update(current)
-					   console.log(current)
+					  // console.log(current)
 					   },1000)
 				
 	          });	
@@ -600,12 +686,14 @@
 				scale(historical, 0, historical.length)
 				buildChart(historical)
 				movingAverage(historical)
+				//alert("hello")
 			  });
 			  document.getElementById("FiveMinButton").addEventListener("click", function()
 			  {
 			   d3.selectAll(".y").remove();
 			   d3.selectAll(".historical").remove();
 			   d3.select(".pane").remove();
+				  alert("Hello")
 	         $.get('/data', function(data, status)
 	         { 
 			
@@ -630,7 +718,7 @@
 			function shiftUpdate(array)
 			{
 			  historicalOffset = candleMargin + (candleGap * array.length);
-			  liveXoffset =  (- historicalOffset + 800) + (candleMargin + ((array.length) * candleGap))
+			  liveXoffset =  (- historicalOffset + width-100) + (candleMargin + ((array.length) * candleGap))
 			  
 			  liveYoffset = y(max(array[array.length-1].Open , array[array.length-1].Close))
 			}
@@ -640,19 +728,20 @@
 			{
 			    z =  d3.event.translate[0];
 				console.log(z)
-				if(z >= 0)
+				if(z >= -0)
 				{
-				
+//				
 				candlestick.attr("transform", "translate(" + z + ")")
-				
+				console.log(z)
 				}
+		
 				else if (z < 0) // a bug causes this value to suddenly shoot under 0 so this statement will correct that and recenter the graph is occured
 				{
 					z = 0;
 				candlestick.attr("transform", "translate(" + z + ")")
 
 				}
-								//console.log(z)
+//								//console.log(z)
 			}
 				
 
@@ -716,123 +805,27 @@
 					
 					
 					
-//			setInterval(function()
-//		     {
-//				$.get('/current', function(data, status)
-//				{
-//				 console.log(data);
-//				 historical.push(data[0]);
-//				 historical.shift();
-//				 d3.selectAll(".y").remove();
-//			   	 d3.selectAll(".historical").remove();
-//				 d3.select(".pane").remove();
-//			     rescale()
-//				 shiftUpdate(historical)
-//				 buildChart(historical);
-//				 data = [];
-//				// alert("one minute has passed")
-//
-//				});	
-//			},60000)
+			setInterval(function()
+		     {
+				$.get('/current', function(data, status)
+				{
+				 console.log(data);
+				 historical.push(data[0]);
+				 historical.shift();
+				 d3.selectAll(".y").remove();
+			   	 d3.selectAll(".historical").remove();
+				 d3.select(".pane").remove();
+			   	 scale(historical, 0, historical.length-1)
+				 shiftUpdate(historical)
+				 buildChart(historical);
+				 data = [];
+				// alert("one minute has passed")
+
+				});	
+			},60000)
 
 
-					</script>
-
-				</div>
-
-        </div>
-
-
-        <!--row containing buttons for pencil, grid, charts and time periods-->
-        <div class="row bluebarbottom">
-            <div class="col-md-1 col-md-offset-1 ">
-                <!-- Single button -->
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="draw tool"><img src="images/draw.png"></button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">draw tool</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-md-1 ">
-                <!-- Single button -->
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="view in grid"><img src="images/squares.png"></button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">grid view</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-md-1 ">
-                <!-- Single button -->
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="right" title="chart views"><img src="images/connection.png"></button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">Choose A Chart</a></li>
-                        <li role="separator" class="divider"></li>
-                        <li><a href="charts.html">Candlestick</a></li>
-                        <li><a href="movingAverage.html">Moving Average</a></li>
-                        <li><a href="bollingerBands2.html">Bollinger Band</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-md-1 col-md-offset-4 ">
-                <!-- Single button -->
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" id=txt-btn data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">1h</button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">1 hour bar</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-md-1">
-                <!-- Single button -->
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" id=txt-btn data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">30m</button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">30 minute bar</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-md-1">
-                <!-- Single button -->
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" id=txt-btn data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">5m</button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">5 minute bar</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-md-1">
-                <!-- Single button -->
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" id=txt-btn data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">1m</button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">1 minute bar</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- /.container -->
-
-    <!--footer-->
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12 footer">
-                <p class="text-muted">Jamie Hyland and Eleanor Noonan IADT Stock Watch 2017</p>
-            </div>
-        </div>
-    </div>
-
-    <!--script for CHARTS
-========================================================== -->
+					</script>	
   
     <!--===================END OF CHART SCRIPT==================-->
 

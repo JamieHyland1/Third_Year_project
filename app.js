@@ -22,7 +22,7 @@ var	data = [];
 var oneArray = []; // will hold every value generated every second for one minute 
 var current = []
 var value = [];
-var beginning = 250
+var beginning = 500
 
       
 var wss = new ws({
@@ -36,8 +36,8 @@ var wss = new ws({
 setInterval(function()
 {
 	generateData()
-	console.log(oneArray.length)
-	if(oneArray.length % 60 === 0)
+	//console.log(oneArray.length)
+	if(oneArray.length % 60 === 0) //if the length of the array is 60 insert an object to the database and wipe the array to restart the counter
 	{
 	 insertData(oneArray)
 	 oneArray = []	
@@ -46,7 +46,7 @@ setInterval(function()
 	value.shift();
 },1000)
 
-wss.on("connection", function  (ws)
+wss.on("connection", function  (ws) //this function will be called whenever the client opens a connection to the server
 {
 
 var data = [];
@@ -56,21 +56,19 @@ var data = [];
 	
 	setInterval(function()
 		{
-			var msg = JSON.stringify(value[value.length-1]);
-		//console.log(msg + "is the message")
+			var msg = JSON.stringify(value[value.length-1]); //stringify the most recent value in the value[] array as websockets can only send JSON strings or DOM blobs
 			ws.send(msg, function(error)
 			{
-				//console.log(error)
+				//console.log(error) //simple callback function to log any error when sending a packet to user, generally called when a user refreshes the page as incoming messages may be dropped prevents server from crashing
 			});
 		},1000)
 	
 	
 	ws.onclose = function(event)
 	{
-	 console.log("Connection Closed")
+	 console.log("Connection Closed") //signify the connection to the client has been closed
 	}
 	
-	//generateData();
 	
 });
 
@@ -79,9 +77,9 @@ function sortNumber(a,b) //function to make sure array.sort sorts by size and no
      return a - b;
 	}
 
-function insertData(array)
+function insertData(array) //takes an array of numbers as a parameter to be inserted into the DB
 {
-	var currentdate = new Date(); 
+	var currentdate = new Date(); //get the current date
 	var datetime =  currentdate.getDate() + "/"
                 + (currentdate.getMonth()+1)  + "/" 
                 + currentdate.getFullYear() + "  "  
@@ -93,17 +91,17 @@ function insertData(array)
 	 array.sort(sortNumber); //sort the array by size from lowest to highest
 	 var high = array[array.length-1]; //get the highest value from the array
 	// console.log(high)
-	var low = array[0];
+	var low = array[0]; //get the lowest value from the array
 	// console.log(high)
-	var obj = {"Date": datetime, "High": high, "Low": low, "Open": open, "Close": close};
-	current.push(obj)
-	//console.log(obj)
+	var obj = {"Date": datetime, "High": high, "Low": low, "Open": open, "Close": close}; //create object to be inserted to DB
+	
+	current.push(obj) //push object to current array, will be used to send to the user after a minute has passed. Less overhead cpu and time wise than querying the DB for a single object
 	var url = 'mongodb://localhost:27017/stockData'; 
 	// Use connect method to connect to the Server
 	MongoClient.connect(url, function(err, db)
 	{
-		assert.equal(null, err);
-	//	console.log("Connected correctly to server");
+		assert.equal(null, err); //check to see if there are any errors
+		
 		// Insert a single document
 		db.collection('stockData').insertOne(obj, function(err, r)
 		{
@@ -124,50 +122,55 @@ app.use(express.static('public')); //set up express to send static files
 app.get('/', function (req, res) {
 	res.sendFile(__dirname + "/" + "index.html");
 })
-app.get('/test', function(req,res){
+app.get('/test', function(req,res){ //this will send the last 100 documents to the client via GET request
 		var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
 
-.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 100, sort: {_id:-1}})
+.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 100, sort: {_id:-1}}) //query to database find 100 documents in ascending order 
 
-.then(function(doc){doc.forEach(function(doc){historical.push(doc)})})
+.then(function(doc){doc.forEach(function(doc){historical.push(doc)})}) //push each document to the historical array
 
-.then(function(){generateData()
+.then(function(){generateData() //start generating random values  //send the array of 100 documents to the client along with the status 200 ok 
 				res.status(200).send(historical)})
 
 .finally(function(){db.close()
-					historical = []})
+					historical = []}) //if all the chains in the promise above have been succesfful close the db connection and then wipe the historical array to make sure dublicate values arent stored in the array
 
-.catch(function(err)
+.catch(function(err) //catch and log any errors that may have occured along the chain of .then()'s
 {
  console.log(err)}); 
 })
 		})
 app.get('/data', function(req, res){
+	var fiveMin = []
   var client = MongoClient.connectAsync('mongodb://localhost:27017/stockData')
-.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 500 })})
-.then(function(doc){doc.forEach(function(doc){data.push(doc)})})
+.then(function(db) {return db.collection("stockData").findAsync({}, { limit: 500, sort: {_id:-1}  })}) //retrieve the last 500 documents from the DB
+.then(function(doc){doc.forEach(function(doc){data.push(doc)})}) //push those documents to the data array
 .then(function(){ 
 			var open
 			var close
 			var high
 			var low
 
-			for(var i = 0; i < data.length/2; i++)
+			for(var i = 0; i < data.length; i++) 
 			{
-			 a = data.splice(0,5)
+			 a = data.splice(0,5) //splice the data array from index 0,5 this returns an array with 5 objects in it 
 			 open = a[0].Open;
 			 close = a[4].Close;
-			 var highValues = a.map(function(o) { return o.High; });
-			 high =  Math.max.apply(null, highValues);
-			 var lowValues = a.map(function(o) { return o.Low; });
-			 low = Math.min.apply(null, lowValues);
-			 var obj = {"High": high, "Low": low, "Open": open, "Close": close}
-			 data.push(obj)
+			 var highValues = a.map(function(o) { return o.High; }); //returns an array of only the High values from the spliced array
+				
+			 high =  Math.max.apply(null, highValues); // get the highest value from the highValues array, the map function takes in 'this' and an array as parameters but as 'this' isnt being used we substitute with null
+				
+			 var lowValues = a.map(function(o) { return o.Low; }); //returns an array of only the Low values from the spliced array
+			 low = Math.min.apply(null, lowValues); //Get the lowest value from the lowValues array
+				
+			 var obj = {"High": high, "Low": low, "Open": open, "Close": close} //create 5 minute object
+			 fiveMin.push(obj) //push object to fiveMin array
 			}
-		    res.status(200).send(data)
+		    res.status(200).send(fiveMin) //send fiveMin array back to client along with respobse 200 OK
 			data = [];
+			fiveMin = [];
 		})
-.catch(function(err){
+.catch(function(err){ //catch and log any errors that may occur in the promise chain
  console.log(err)}); 
 })
 
@@ -178,16 +181,16 @@ app.get('/current', function(req, res)
 	  res.status(200).send(current)
 	  console.log(current)
 	  current = [];
-}) //close the database once the query is finished		
+}) 
 
 
 
 
 function generateData()
 {
-	var rnd = Math.random().toFixed(2)
-	var data = Perlin.noise(Math.random());
-	var x = beginning + data
+	var rnd = Math.random().toFixed(2) //will be used to determine wether the beginning stock value rises or lowers
+	var data = Perlin.noise(Math.random()); //perlin noise function takes in a parameter to seed the generation, in this case Math.Random()
+	var x = beginning + data 
 	//console.log(x)
 	if(rnd == 0.25)
 	{
@@ -199,14 +202,14 @@ function generateData()
 	beginning--;
 	//console.log("minus 1 ")
 	}
-	oneArray.push(x)
-	value.push(x)
+	oneArray.push(x) //push to the oneArray array, will be used to process object for DB
+	value.push(x) //push to value array, this will be used to send to the client on a per second basis
 //	console.log(value)
 }
 	
 
 
-var server = app.listen(8081, function () 
+var server = app.listen(8081, function ()  //listen on port 8081 for a request
 {
 	var host = server.address().address
 	var port = server.address().port
