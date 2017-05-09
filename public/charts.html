@@ -8,6 +8,18 @@
         shape-rendering: crispEdges;
         background-color: #383840;
     }
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #b5b6b7;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+	
 </style>
 
 <head>
@@ -37,7 +49,7 @@
 
     <!-- Custom styles for this template -->
     <link href="starter-template.css" rel="stylesheet">
-
+	<script src="/socket.io/socket.io.js"></script>
     <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
     <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
 <!--    <script src="assets/js/ie-emulation-modes-warning.js"></script>-->
@@ -99,15 +111,20 @@
                     <ul class="dropdown-menu">
                         <li><a href="#" onclick="applefunction()" id="asset"><i class="fa fa-apple" aria-hidden="true"></i> Apple Inc.</a></li>
                         <li><a href="#" onclick="microsoftfunction()" id="asset"><i class="fa fa-windows" aria-hidden="true"></i> Microsoft</a></li>
-                        <li><a href="#" onclick="googlefunction()" id="asset"><i class="fa fa-google" aria-hidden="true"></i> Google</a></li>
+                        <li><a href="#" id="google" onclick="googlefunction()" id="asset"><i class="fa fa-google" aria-hidden="true"></i> Google</a></li>
                         <li role="separator" class="divider"></li>
-                        <li><a href="#" onclick="bitcoinfunction()" id="asset"><i class="fa fa-btc" aria-hidden="true"></i> Bitcoin</a></li>
+                        <li><a href="#" id="bitcoin" onclick="bitcoinfunction()" id="asset"><i class="fa fa-btc" aria-hidden="true"></i> Bitcoin</a></li>
                     </ul>
                 </div>
             </div>
 
             <div class="col-md-7">
-                <div class=assetbox id=box></div>
+                <div class=assetbox id=box>
+				
+				<textarea id="stockName"></textarea>
+				<button id="close"></button>
+				
+				</div>
 
             </div>
 
@@ -159,7 +176,7 @@
                         <li><a href="#">Choose A Chart</a></li>
                         <li role="separator" class="divider"></li>
                         <li><a href="charts.html">Candlestick</a></li>
-                        <li><a id="movingAverage" href="movingAverage.html">Moving Average</a></li>
+                        <li><a id="movingAverage" href="#">Moving Average</a></li>
                         <li><a href="bollingerBands2.html">Bollinger Band</a></li>
                     </ul>
                 </div>
@@ -224,20 +241,9 @@
 
     <!--script for CHARTS
 ========================================================== -->
-<script type="text/javascript">
-                var webSocket = new WebSocket("ws://localhost:3000");
-				webSocket.onopen = function (event) //connect to server via websocket
-				{
-				 console.log('Websocket connection open'); //when the connection is established log this message to the console
-				};
-				
-
-				webSocket.onclose = function ()
-				{
-					console.log("closed")
-				}
-				
+<script type="text/javascript">	
 				//initialising instance variables
+				var socket = io.connect();
 				var isLoaded = false;
 				var candleWidth = 20;
 				var candleGap = 40;
@@ -251,17 +257,6 @@
 				 ,bottom: 10
 				 ,left: 10
 				}
-				var opts =
-				{
-				  lines: 9, // The number of lines to draw
-				  length: 9, // The length of each line
-				  width: 5, // The line thickness
-				  radius: 14, // The radius of the inner circle
-				  color: '#EE3124', // #rgb or #rrggbb or array of colors
-				  speed: 1.9, // Rounds per second
-				  trail: 40, // Afterglow percentage
-				  className: 'spinner', // The CSS class to assign to the spinner
-				};
 				var width = 1170;
                 var height = 365;
 				var historical = [];
@@ -277,6 +272,7 @@
 				var maxi;
 				var max;
 				var rect;
+				var stock
 				var live
 				var maxLow;
 				var maxHigh;
@@ -296,65 +292,67 @@
 				var historicalOffset
 		     	var band = []
 
-				
-				webSocket.onmessage = function (event, err) 
-				{
-					var e = JSON.parse(event.data); //the data will be retrieved as a JSON string this will parse the data out of that string
-					var data = e;
-				//	console.log(data)								
-					 if (data !== null && typeof data === 'number')
-					{
-					current.push(data);
-						//console.log(data)
-					current.shift()
-					
-					}
-				}
-				
-				
-				
-					
-					
-					
+			socket.on('connect',function()
+			{
+				console.log(socket.id);
 
-				webSocket.close = function (event) 
-				{
-				console.log("connection closed");
-				}
+			});
+						
+			socket.on("current",function(data)
+			{
+					//	console.log(current)
+						current.push(data)
+						//shiftUpdate(historical)
+						//update(current)
+						current.shift()
+					})	
+	
+			socket.on("latest",function(data)
+			{
+			 console.log(data);
+		 historical.shift()
+		 historical.push(data);
+		 d3.selectAll(".y").remove();
+		 d3.selectAll(".historical").remove();
+		 d3.select(".pane").remove();
+		 scale(historical, 0, historical.length-1)
+		 shiftUpdate(historical)
+		 buildChart(historical);
+	})	
+			
+		   var target = document.getElementById('#chart');
 
-				var target = document.getElementById('#chart');
+		   chart = d3.select("#chart").append("svg")
+		   .attr("width", width + margin.right)
+		   .attr("height", height + margin.top + margin.bottom)
+		   .attr("id", "svg")
+		   .append("g")
+		   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-				//create initial svg
-				chart = d3.select("#chart").append("svg")
-				.attr("width", width + margin.right)
-				.attr("height", height + margin.top + margin.bottom)
-				.attr("id", "svg")
-				.append("g")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-				grid = chart.append("g")
-				.attr("class", "gridding");
+		    grid = chart.append("g")
+		   .attr("class", "gridding");
 
 
 
-			   chart.append("clipPath")
-			   .attr("id", "clip")
-			   .append("rect")
-			   .attr("width", width)
-			   .attr("height", height);
+		   chart.append("clipPath")
+		   .attr("id", "clip")
+		   .append("rect")
+		   .attr("width", width)
+		   .attr("height", height);
 
 
 			  
-			   candlestick = chart.append("g")
-			   .attr("id", "clipped")
-			   .attr("clip-path", "url(#clip)")
-			   .append("g")
-			   .attr("class", "candlesticks")
+		   candlestick = chart.append("g")
+		   .attr("id", "clipped")
+		   .attr("clip-path", "url(#clip)")
+		   .append("g")
+		   .attr("class", "candlesticks")
 
 
 
-			   function buildChart(array)
-			   {        
+		   function buildChart(array)
+		   {   
+				   console.log(array)
 				 var historicalOffset = candleMargin + (candleGap * array.length);
 				// console.log(historicalOffset)
 				 var a = candlestick.append("g").attr("class", "historical")
@@ -431,11 +429,11 @@
 				}
 
 
-			   live = candlestick.append("g").attr("class", "live")
+		   live = candlestick.append("g").attr("class", "live")
 			   
 			   
-			   function update(current)  //this function will be used to constantly update the live update bar every second
-				{
+		   function update(current)  //this function will be used to constantly update the live update bar every second
+			{
 					rect = live.selectAll("rect").data(current)
 					rect.enter()
 					.append("rect")
@@ -466,7 +464,8 @@
 					.attr("y", liveYoffset)
 					.attr("height", function (d)
 				    {
-					 return  y(min(historical[historical.length-1].Open, d)) - y(max(historical[historical.length-1].Close, d))
+//					 return  y(min(historical[historical.length-1].Open, d)) - y(max(historical[historical.length-1].Close, d))
+					 return maxHigh - d
 					})
 
 					rect.exit();
@@ -474,24 +473,19 @@
 				//console.log(current);
 			    }      
 
-			   // document.getElementById("svg").addEventListener("mouseup", console.log("hello world"))
+			function min(a, b)
+			{
+			return a < b ? a : b;
+			};
 
-			    function min(a, b)
-			    {
-				return a < b ? a : b;
-			    };
+			function max(a, b)
+			{
+			 return a > b ? a : b;
+			};
 
-			    function max(a, b)
-			    {
-			     return a > b ? a : b;
-			    };
-
-
-
-
-
-				function scale(array, start, end)
-				{
+			function scale(array, start, end)
+			{
+				let padding = 0;
 			      var a = array.slice(start, end)
 			//	  console.log(a)
 				 maxi = d3.max(a, function (d)
@@ -557,175 +551,140 @@
 				.attr("stroke", hLineColor);
 			    
 				numbers = grid.selectAll("text.yrule")
-				.data(y.ticks(10))
-				.enter()
-				.append("svg:text")
-				.attr("class", "yrule")
-				.attr("x", 0)
-				.attr("y", y)
-				.attr("dy", 0)
-				.attr("dx", 20)
-				.style("fill", "#b5b6b7")
-				.attr("text-anchor", "middle")
-			    }
+      					  .data(y.ticks(10))
+      					  .enter()
+      					  .append("text")
+						  .attr("class", "yrule")
+						  .attr("id", "numbers")
+						  .text(String)
+						  .attr("x", 0)
+						  .attr("y", y)
+						  .attr("dy", 0)
+						  .attr("dx", 20)
+						  .style("fill", "white")
+						  .attr("text-anchor", "left")
+				
+				
+//				grid.attr("class", "axis")
+//			    .attr("transform", "translate(0," + (height - padding) + ")")
+//    			.call(xAxis);
+				
+			}
 					
 			function movingAverage(array)
 			{
-			  movingAvg = function (data, neighbors)
- 			  {
-	 		//	console.log("neighbours is: "+neighbors)
-  				return data.map( function(val, idx, arr)
+			 var stockData = array;
+			 console.log(stockData)
+			 var band = []
+			 var movingAvg = function (data, neighbors)
+ 			 {
+	 			console.log("neighbours is: "+neighbors)
+  				return data.map(function(val, idx, arr)
 				{
      			let start = Math.max(0, idx - neighbors)
 	 			let end = idx + neighbors
      			let subset = arr.slice(start, end + 1)
      			let sum = subset.reduce((a,b) => a + b)
+				console.log(sum)
      			return sum / subset.length
-  				})
-			  }	
-		
-			  
-			  for(var i = 0; i < array.length; i++)
-			  {
-				band.push(array[i].Close)
-				//console.log(band[i])
+  			    })
+			 }	
+			 for(var i = 0; i < (stockData.length); i++)
+			 {
+			   let obj = {"x": (- historicalOffset + width-100) + (candleMargin + (candleGap * i)), "y": stockData[i].Close}
+			   band.push(obj)
+			   console.log(band[i])
 			  }
 				var dataAvg = movingAvg(band, 1)	
 
-				var x = d3.scale.linear()
-    					.domain([0, array.length])
-						.range([(-historicalOffset + width-100), width])
-    
-				var y = d3.scale.linear()
-					.domain([0, height])
-					.range([height,0])
+				var lineFunction = d3.svg.line()
+                .x(function (d) {
+                    return  d.x;
+                })
+                .y(function (d) {
+                    return  (height-d.y);
+                })
+                .interpolate("basis")
 				
-				var avgX = d3.scale
-						.linear()
-					.domain([0, array.length])
-						.range([0, width])
-    
-				var avgY = d3.scale
-					.linear()
-					.domain([0, height])
-					.range([height,0])
-				
-				//var line = d3.svg.line().x(function(d){return avgX(d)}).y(function(d){return avgY(d)}).interpolate
-
 				var avg = candlestick.append("g").attr("class", "average")
-
-				var straightLine = d3.svg.line()
-				.interpolate("basis")   
-    			.x((d,i) => x(i))
-    			.y(d => y(d))
 				
-				var curvedLine = 
-					
-					d3.svg.line()
-					.x((d,i) => avgX(i))
-					.y(function(d){ return avgY(d)})
-					.interpolate("basis")
-						
-			var path =	avg.append('path')
-						.attr('class', 'avg')
-						.datum(dataAvg)
-						.attr("d", curvedLine)
-						.attr("stroke", "steelblue")
-						.attr("stroke-width", "2")
-						.attr("fill", "none");
-						
-					path.transition()
-                        .duration(400)
-						//.attr("d", curvedLine)
-						//.interpolate("cardinal")
-						//
-//						avg.append('path')
-//						.datum(band)
-//						.transition()
-//                        .duration(400)
-//						.attr('d', straightLine)
-//						.attr("fill", "none")
-//						.attr("stroke", "blue")
-//						.attr("stroke-width", 1)
-
-			
+				var line = avg.append("path")
+				  .attr("class", "avg")
+				  .attr("d", lineFunction(band))
+				  .style("stroke-width", 2)
+				  .style("stroke", "steelblue")
+				  .style("fill", "none")
+				  .style( "shape-rendering", "auto")
+                
+				line.select("path").transition()
+    			.delay(1000)
+      			.duration(500)
+      			.ease("linear")
+      			.attr("d", lineFunction(band));
 			}
-					
-			 
-
-			window.onload = function()
-			{
-			 $.get('/test', function(data, status)
-	         { 
 			
-				historical = data; 
-				scale(historical, 0, 99)
-				buildChart(historical)
-				shiftUpdate(historical)
-				movingAverage(historical)
+			 
+			socket.on("current",  function(data, status)
+			{
+			 current.push(data)
+			// update(curre)
+			 current.shift()
+			 console.log(current)
 
-				setInterval(function()
-					   {		
-					   update(current)
-					  // console.log(current)
-					   },1000)
-				
-	          });	
-				
-			 document.getElementById("movingAverage").addEventListener("click", function()
-			 {
+			})
+
+
+		  
+		   document.getElementById("movingAverage").addEventListener("click", function()
+		   {
 				movingAverage(historical)
-				console.log("moving average");
+				//console.log("moving average");
 			 })
-			 document.getElementById("OneMinButton").addEventListener("click", function()
-			 {
+			 
+		   document.getElementById("OneMinButton").addEventListener("click", function()
+		   {
 				d3.selectAll(".y").remove();
 				d3.selectAll(".historical").remove();
 				d3.select(".pane").remove();
-				shiftUpdate(historical)
-				scale(historical, 0, historical.length)
+				d3.selectAll('#numbers').remove()
+			    d3.selectAll(".avg").remove()
+				//socket.emit("data",stock)
+			    scale(historical, 0, historical.length-1)
 				buildChart(historical)
-				movingAverage(historical)
-				//alert("hello")
+				shiftUpdate(historical)
 			  });
-			  document.getElementById("FiveMinButton").addEventListener("click", function()
-			  {
+			  
+		   document.getElementById("FiveMinButton").addEventListener("click", function()
+		   {
 			   d3.selectAll(".y").remove();
 			   d3.selectAll(".historical").remove();
 			   d3.select(".pane").remove();
-				  alert("Hello")
-	         $.get('/data', function(data, status)
-	         { 
+			   d3.selectAll('#numbers').remove()
+			   socket.emit("Five", stock)  
+		   });
 			
-				fiveHistorical = []
+		   socket.on("FiveData", function(data){
+			   // alert(data)
+			    console.log("DATA IS: "+data)
+			    fiveHistorical = []
 				fiveHistorical = data
-				scale(fiveHistorical, 80, 99)
+				scale(fiveHistorical, 0, 99)
 				shiftUpdate(fiveHistorical)
 				buildChart(fiveHistorical)
-				console.log(fiveHistorical)
+				//console.log(fiveHistorical)
+				})
 			
-	          });
-
-				  				
-
-				  				movingAverage(fiveHistorical)
-
-				console.log("length of array is " + fiveHistorical.length)
-
-				});
-			}
-
-			function shiftUpdate(array)
-			{
+		   function shiftUpdate(array)
+		   {
+			  console.log(array)
 			  historicalOffset = candleMargin + (candleGap * array.length);
 			  liveXoffset =  (- historicalOffset + width-100) + (candleMargin + ((array.length) * candleGap))
 			  
 			  liveYoffset = y(max(array[array.length-1].Open , array[array.length-1].Close))
 			}
 
-
-			function zoomed() 
-			{
+		   function zoomed() 
+		   {
 			    z =  d3.event.translate[0];
 				console.log(z)
 				if(z >= -0)
@@ -743,11 +702,9 @@
 				}
 //								//console.log(z)
 			}
-				
-
-					
-			function rescale()
-			{
+						
+		   function rescale()
+		   {
 				 if(z >= 842 && z <= 1684 )
 				{
 					candlestick.attr("transform", "translate(" + z + ")")
@@ -800,46 +757,67 @@
 				}
 			}
 					
-			
-					
-					
-					
-					
-			setInterval(function()
-		     {
-				$.get('/current', function(data, status)
+		   socket.on('data', function(data)
+	       { 
+			    historical = []
+				historical = data; 
+				scale(historical, 0, historical.length-1)
+				buildChart(historical)
+				shiftUpdate(historical)
+				setInterval(function()
 				{
-				 console.log(data);
-				 historical.push(data[0]);
-				 historical.shift();
-				 d3.selectAll(".y").remove();
-			   	 d3.selectAll(".historical").remove();
-				 d3.select(".pane").remove();
-			   	 scale(historical, 0, historical.length-1)
-				 shiftUpdate(historical)
-				 buildChart(historical);
-				 data = [];
-				// alert("one minute has passed")
+				  socket.emit("current")
+					update(current)
+				},1000)
+				
+				
+	          });
+		   
+		   document.getElementById("bitcoin").addEventListener("click", function()
+		   {
+			   historical = []
+			   d3.selectAll(".y").remove();
+			   d3.selectAll(".historical").remove();
+			   d3.select(".pane").remove();
+		       d3.selectAll("#numbers").remove()
+			   stock = "BitCoin"
+			   socket.emit("data", stock)
+			   socket.emit("changeCurrent", stock)
+				 
 
-				});	
-			},60000)
+			 })
+	
+		   document.getElementById("google").addEventListener("click", function(){
+			 historical = [];
+			 d3.selectAll(".y").remove();
+			 d3.selectAll(".historical").remove();
+			 d3.select(".pane").remove();
+		     d3.selectAll("#numbers").remove()
+			 stock = "Google"
+			 socket.emit("data", stock)
+			 socket.emit("changeCurrent", stock)
+			})
+					
+		 	socket.on("newest", function(data){
+			if(data[0].Ticker == "Bitcoin" && stock == "BitCoin")
+			{
+				historical.shift()
+				historical.push(data[0])
+				  d3.selectAll(".historical").remove();
+				shiftUpdate(historical)
+				buildChart(historical,0,99)
+			}
+			})
 
-
-					</script>	
-  
-    <!--===================END OF CHART SCRIPT==================-->
-
-    <!--script for TOOLTIPS-->
-    <script>
-//        $(function() {
-//            $("[data-toggle = 'tooltip']").tooltip();
-//        });
-    </script>
-
-
-    <!--js for asset boxes-->
-    <script type="text/javascript">
-        function ShowAsset1() {
+		   document.getElementById("close").addEventListener("click",function()
+		   {
+			   d3.selectAll(".y").remove();
+			   d3.selectAll(".historical").remove();
+			   d3.select(".pane").remove();
+			   d3.selectAll("#numbers").remove()
+		   })    
+	
+           function ShowAsset1() {
             /*var div = document.getElementById("assetbox");*/
             var img = new Image();
             var div = document.getElementById("assetbox").innerHTML = "Apple Inc.";
@@ -851,25 +829,22 @@
 
         }
 
-        function ShowAsset2() {
+           function ShowAsset2() {
             document.getElementById("assetbox").innerHTML = "Microsoft"; //it's calling the textarea id repeat for 3 now
             console.log("microsoft");
         }
 
-        function ShowAsset3() {
+           function ShowAsset3() {
             document.getElementById("assetbox").innerHTML = "Google"; //it's calling the textarea id repeat for 3 now
             console.log("google");
         }
 
-        function ShowAsset4() {
+           function ShowAsset4() {
             document.getElementById("assetbox").innerHTML = "Bitcoin"; //it's calling the textarea id repeat for 3 now
             console.log("bitcoin");
         }
-    </script>
-
-    <!--script for ADDING TEXTAREA ASSET BOX AND BUTTON-->
-    <script>
-        function applefunction() {
+   
+           function applefunction() {
             var x = document.createElement("TEXTAREA");
             var t = document.createTextNode("Apple Inc.");
             x.appendChild(t);
@@ -881,7 +856,7 @@
             /*onclick.button = close();*/
         }
 
-        function microsoftfunction() {
+           function microsoftfunction() {
             var x = document.createElement("TEXTAREA");
             var t = document.createTextNode("Microsoft");
             x.appendChild(t);
@@ -893,35 +868,21 @@
             /*onclick.button = close();*/
         }
 
-        function googlefunction() {
-            var x = document.createElement("TEXTAREA");
-            var t = document.createTextNode("Google");
-            x.appendChild(t);
-            document.body.appendChild(x);
-            document.getElementById(box);
-            box.appendChild(x);
-            var button = document.createElement("button");
-            box.appendChild(button);
-            /*onclick.button = close();*/
+           function googlefunction() {
+           document.getElementById("stockName").innerHTML ="Google"
         }
 
-        function bitcoinfunction() {
-            var x = document.createElement("TEXTAREA");
-            var t = document.createTextNode("Bitcoin");
-            x.appendChild(t);
-            document.body.appendChild(x);
-            document.getElementById(box);
-            box.appendChild(x);
-            var button = document.createElement("button");
-            box.appendChild(button);
-            /*onclick.button = close();*/
+           function bitcoinfunction() {
+            
+			document.getElementById("stockName").innerHTML ="BitCoin"
         }
 
-
-        function close() {
+           function close() {
             document.getElementById(box);
             box.remove();
-        }
+			document.getElementById("stockName").innerHTML = ""
+		   }
+	
     </script>
 
 

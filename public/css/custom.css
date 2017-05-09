@@ -260,3 +260,55 @@ img {
     padding-bottom: 10px;
     height: 20px;
 }
+/*button groups at bottom left */
+
+.btn-group.mr-2 {
+    margin-top: 0px;
+    margin-bottom: 10px;
+}
+
+.btn.btn-primary.dropdown-toggle.one {
+    width: 45px;
+    height: 45px;
+    border-radius: 4px;
+}
+
+.btn.btn-primary.dropdown-toggle.two {
+    width: 45px;
+    height: 45px;
+    margin-left: 2px;
+    border-radius: 4px;
+}
+
+.btn.btn-primary.dropdown-toggle.three {
+    width: 45px;
+    height: 45px;
+    margin-left: 2px;
+    border-radius: 4px;
+}
+
+
+/*button groups at bottom right */
+
+.btn-group.mr-2.two {
+    margin-left: 30px;
+    margin-top: 2.5px;
+}
+
+.btn.btn-primary.dropdown-toggle.text {
+    width: 55px;
+    height: 30px;
+    margin-left: 2px;
+    border-radius: 4px;
+}
+
+
+/*ADDED for About page*/
+
+p {
+    padding-top: 10px;
+    font-family: "Open Sans", sans-serif;
+    line-height: 24px;
+    font-size: 14px;
+    color: #fbfdfc;
+}
